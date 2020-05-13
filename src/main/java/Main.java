@@ -2,14 +2,12 @@ import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 
 import javax.crypto.*;
-import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 
 
 public class Main {
@@ -22,17 +20,10 @@ public class Main {
         initCipher();
         initKey();
 
-
-        final String myMessage = "my plain text 11";
-        final byte[] messageBytes = myMessage.getBytes(StandardCharsets.UTF_8);
-        final String inputMessage = ("13 01 0000000000000001 00000010 5E2C"
-                + Hex.encodeHexString(messageBytes)).replace(" ", "") + "4FC7";
-        //decode(Hex.decodeHex(inputMessage));
-
         decodePacket(encode());
     }
 
-    private static void decodePacket(final byte[] inputMessage) {
+    public static void decodePacket(final byte[] inputMessage) {
         if (inputMessage[0] != 0x13) {
             throw new IllegalArgumentException("Invalid magic byte");
         }
@@ -107,7 +98,7 @@ public class Main {
     }
 
 
-    private static void initCipher() {
+    public static void initCipher() {
         try {
             cipher = Cipher.getInstance(algorithm);
         } catch (NoSuchAlgorithmException e) {
@@ -117,7 +108,7 @@ public class Main {
         }
     }
 
-    private static void initKey() {
+    public static void initKey() {
         try {
             key = KeyGenerator.getInstance(algorithm).generateKey();
         } catch (NoSuchAlgorithmException e) {
@@ -125,7 +116,7 @@ public class Main {
         }
     }
 
-    private static byte[] encryptMessage(final byte[] message) {
+    public static byte[] encryptMessage(final byte[] message) {
         try {
             cipher.init(Cipher.ENCRYPT_MODE, key);
 
@@ -145,7 +136,7 @@ public class Main {
     }
 
 
-    private static byte[] decryptMessage(final byte[] message) {
+    public static byte[] decryptMessage(final byte[] message) {
         try {
             cipher.init(Cipher.DECRYPT_MODE, key);
 
