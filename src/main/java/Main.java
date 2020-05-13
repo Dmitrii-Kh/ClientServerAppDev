@@ -12,11 +12,11 @@ public class Main {
         final String inputMessage = ("13 01 0000000000000001 00000010 5E2C"
                 + Hex.encodeHexString(messageBytes)).replace(" ", "") + "4FC7";
         //decode(Hex.decodeHex(inputMessage));
-        decode(encode());
 
+        decodePacket(encode());
     }
 
-    private static void decode(final byte[] inputMessage){
+    private static void decodePacket(final byte[] inputMessage){
         if(inputMessage[0] != 0x13){
             throw new IllegalArgumentException("Invalid magic byte");
         }
@@ -59,10 +59,18 @@ public class Main {
             throw new IllegalArgumentException("CRC2 expected : " + crc2Evaluated + ", but was : " + crc2);
         }
 
+        decodeMessage(message, messageLength);
     }
 
-    public static byte[] encode(){
-        final byte[] myMessage = "server response".getBytes(StandardCharsets.UTF_8);
+    public static byte[] encode() throws DecoderException{
+        final String usefulData = "Useful data";
+        final byte[] messageBytes = usefulData.getBytes(StandardCharsets.UTF_8);
+
+        final String inputMessage = ("00000001 00000010"
+                + Hex.encodeHexString(messageBytes)).replace(" ", "");
+
+        final byte[] myMessage = Hex.decodeHex(inputMessage);
+
         final byte[] header = new byte[] {
                 0x13,
                 0,
@@ -76,6 +84,24 @@ public class Main {
                 .put(myMessage)
                 .putShort(CRC16.evaluateCrc(myMessage,0,myMessage.length))
                 .array();
+
+    }
+
+
+    private static void decodeMessage(final byte[] inputMessage, int messageLength){
+        final int commandType = ByteBuffer.wrap(inputMessage,0,4)
+                .order(ByteOrder.BIG_ENDIAN)
+                .getInt();
+        System.out.println("Command type : " + commandType);
+
+        final int userId = ByteBuffer.wrap(inputMessage,4,4)
+                .order(ByteOrder.BIG_ENDIAN)
+                .getInt();
+        System.out.println("User ID : " + userId);
+
+        byte[] message = new byte[messageLength - 8];
+        System.arraycopy(inputMessage, 8, message,0, messageLength - 8);
+        System.out.println("Useful Data from client : " + new String(message));
 
     }
 }
