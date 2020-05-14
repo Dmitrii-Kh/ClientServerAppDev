@@ -1,5 +1,6 @@
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
+import com.google.gson.Gson;
 
 import javax.crypto.*;
 import java.nio.ByteBuffer;
@@ -47,7 +48,7 @@ public class Main {
 
         byte[] message = new byte[messageLength];
         System.arraycopy(inputMessage, 16, message, 0, messageLength);
-        System.out.println("Message from client : " + new String(message));
+        System.out.println("Message from client (deprecated) : " + new String(message));
 
         final short crc2 = ByteBuffer.wrap(inputMessage, 16 + messageLength, 2).order(ByteOrder.BIG_ENDIAN).getShort();
         System.out.println("CRC2 : " + crc2);
@@ -62,10 +63,21 @@ public class Main {
     }
 
     public static byte[] encode() throws DecoderException {
-        final String usefulData   = "Useful data";
+
+        //JSON -> String from JSON -> byte array -> encrypted byte array -> message ready to transmit
+
+        //imitation of incoming json object
+        String jsonText = "{'text':'lorem ipsum'}";
+        Gson gson = new Gson();
+        final String json = gson.toJson(jsonText);    //serialization
+        // System.out.println("json here : " + json);
+
+        //deserialization
+        final String usefulData   = gson.fromJson(json, String.class);
+
         final byte[] messageBytes = usefulData.getBytes(StandardCharsets.UTF_8);
 
-        //encrypt
+        //encryption
         byte[] encryptedMessage = encryptMessage(messageBytes);
 
         final String inputMessage = ("00000001 00000010" + Hex.encodeHexString(encryptedMessage)).replace(" ", "");
@@ -93,8 +105,13 @@ public class Main {
 
         //decrypt
         byte[] decryptedMessage = decryptMessage(message);
-        System.out.println("Useful Data from client : " + new String(decryptedMessage));
 
+        //imitation of return of transmitted json
+//        Gson gson = new Gson();
+//        final String outputJsonObj = gson.toJson(new String(decryptedMessage));
+//        System.out.println("Output json obj here : " + outputJsonObj);
+
+        System.out.println("Useful Data from client : " + new String(decryptedMessage));
     }
 
 
