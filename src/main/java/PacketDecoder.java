@@ -1,36 +1,21 @@
-import com.sun.xml.internal.bind.v2.runtime.reflect.Lister;
-import org.apache.commons.codec.DecoderException;
-import org.apache.commons.codec.binary.Hex;
-import com.google.gson.Gson;
-
-import javax.crypto.*;
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.Key;
-import java.security.NoSuchAlgorithmException;
 
-
-public class Main {
-    private static String algorithm = "DESede";
-    private static Key    key;
+public class PacketDecoder {
+    private static Key key;
     private static Cipher cipher;
 
-    public static void main(String[] args) throws DecoderException {
-
-        initCipher();
-        initKey();
-
-        PacketEncoder.setEncryption(key, cipher);
-        PacketDecoder.setEncryption(key, cipher);
-
-        PacketDecoder.decodePacket(PacketEncoder.encode((byte)0,1, 777,21, "Hello World!"));
-
-        //decodePacket(encode());
+    public static void setEncryption(Key _key, Cipher _cipher){
+        key = _key;
+        cipher = _cipher;
     }
 
-/*
+
     public static void decodePacket(final byte[] inputMessage) {
         if (inputMessage[0] != 0x13) {
             throw new IllegalArgumentException("Invalid magic byte");
@@ -69,35 +54,6 @@ public class Main {
         decodeMessage(message, messageLength);
     }
 
-    public static byte[] encode() throws DecoderException {
-
-        //JSON -> String from JSON -> byte array -> encrypted byte array -> message ready to transmit
-
-        //imitation of incoming json object
-        String jsonText = "{'text':'lorem ipsum'}";
-        Gson gson = new Gson();
-        final String json = gson.toJson(jsonText);    //serialization
-        // System.out.println("json here : " + json);
-
-        //deserialization
-        final String usefulData   = gson.fromJson(json, String.class);
-
-        final byte[] messageBytes = usefulData.getBytes(StandardCharsets.UTF_8);
-
-        //encryption
-        byte[] encryptedMessage = encryptMessage(messageBytes);
-
-        final String inputMessage = ("00000001 00000010" + Hex.encodeHexString(encryptedMessage)).replace(" ", "");
-
-        final byte[] myMessage = Hex.decodeHex(inputMessage);
-
-        final byte[] header =
-        new byte[]{0x13, 0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0A, 0x0, 0x0, 0x0, (byte) myMessage.length};
-
-        return ByteBuffer.allocate(10000).put(header).putShort(CRC16.evaluateCrc(header, 0, header.length))
-                .put(myMessage).putShort(CRC16.evaluateCrc(myMessage, 0, myMessage.length)).array();
-    }
-
 
     private static void decodeMessage(final byte[] inputMessage, int messageLength) {
         final int commandType = ByteBuffer.wrap(inputMessage, 0, 4).order(ByteOrder.BIG_ENDIAN).getInt();
@@ -119,48 +75,9 @@ public class Main {
 
         System.out.println("Useful Data from client : " + new String(decryptedMessage));
     }
-*/
-
-    public static void initCipher() {
-        try {
-            cipher = Cipher.getInstance(algorithm);
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (NoSuchPaddingException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static void initKey() {
-        try {
-            key = KeyGenerator.getInstance(algorithm).generateKey();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
-    }
-
-/*
-    public static byte[] encryptMessage(final byte[] message) {
-        try {
-            cipher.init(Cipher.ENCRYPT_MODE, key);
-
-        } catch (InvalidKeyException e) {
-            e.printStackTrace();
-        }
 
 
-        try {
-            return cipher.doFinal(message);
-        } catch (IllegalBlockSizeException e) {
-            e.printStackTrace();
-        } catch (BadPaddingException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-
-    public static byte[] decryptMessage(final byte[] message) {
+    private static byte[] decryptMessage(final byte[] message) {
         try {
             cipher.init(Cipher.DECRYPT_MODE, key);
 
@@ -177,6 +94,5 @@ public class Main {
             e.printStackTrace();
         }
         return null;
-    } */
-
+    }
 }
