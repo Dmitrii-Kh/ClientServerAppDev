@@ -1,7 +1,7 @@
-import com.sun.xml.internal.bind.v2.runtime.reflect.Lister;
+//import com.sun.xml.internal.bind.v2.runtime.reflect.Lister;
 import org.apache.commons.codec.DecoderException;
-import org.apache.commons.codec.binary.Hex;
-import com.google.gson.Gson;
+//import org.apache.commons.codec.binary.Hex;
+//import com.google.gson.Gson;
 
 import javax.crypto.*;
 import java.nio.ByteBuffer;
@@ -13,17 +13,8 @@ import java.security.NoSuchAlgorithmException;
 
 
 public class Main {
-    private static String algorithm = "DESede";
-    private static Key    key;
-    private static Cipher cipher;
 
-    public static void main(String[] args) throws DecoderException {
-
-        initCipher();
-        initKey();
-
-        PacketEncoder.setEncryption(key, cipher);
-        PacketDecoder.setEncryption(key, cipher);
+    public static void main(String[] args) {
 
         PacketDecoder.decodePacket(PacketEncoder.encode((byte)0,1, 777,21, "Hello World!"));
 
@@ -121,23 +112,7 @@ public class Main {
     }
 */
 
-    public static void initCipher() {
-        try {
-            cipher = Cipher.getInstance(algorithm);
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (NoSuchPaddingException e) {
-            e.printStackTrace();
-        }
-    }
 
-    public static void initKey() {
-        try {
-            key = KeyGenerator.getInstance(algorithm).generateKey();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
-    }
 
 /*
     public static byte[] encryptMessage(final byte[] message) {

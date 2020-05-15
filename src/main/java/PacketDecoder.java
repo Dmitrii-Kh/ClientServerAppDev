@@ -7,13 +7,6 @@ import java.security.InvalidKeyException;
 import java.security.Key;
 
 public class PacketDecoder {
-    private static Key key;
-    private static Cipher cipher;
-
-    public static void setEncryption(Key _key, Cipher _cipher){
-        key = _key;
-        cipher = _cipher;
-    }
 
 
     public static void decodePacket(final byte[] inputMessage) {
@@ -51,22 +44,29 @@ public class PacketDecoder {
             throw new IllegalArgumentException("CRC2 expected : " + crc2Evaluated + ", but was : " + crc2);
         }
 
-        decodeMessage(message, messageLength);
+        decodeMessage(message);
     }
 
 
-    private static void decodeMessage(final byte[] inputMessage, int messageLength) {
+    private static void decodeMessage(final byte[] inputMessage) {
         final int commandType = ByteBuffer.wrap(inputMessage, 0, 4).order(ByteOrder.BIG_ENDIAN).getInt();
         System.out.println("Command type : " + commandType);
 
         final int userId = ByteBuffer.wrap(inputMessage, 4, 4).order(ByteOrder.BIG_ENDIAN).getInt();
         System.out.println("User ID : " + userId);
 
-        byte[] message = new byte[messageLength - 8];
-        System.arraycopy(inputMessage, 8, message, 0, messageLength - 8);
+        byte[] message = new byte[inputMessage.length - 8];
+        System.arraycopy(inputMessage, 8, message, 0, inputMessage.length - 8);
 
         //decrypt
-        byte[] decryptedMessage = decryptMessage(message);
+        byte[] decryptedMessage = new byte[0];
+        try {
+            decryptedMessage = Cryptor.decryptMessage(message);
+        } catch (BadPaddingException e) {
+            e.printStackTrace();
+        } catch (IllegalBlockSizeException e) {
+            e.printStackTrace();
+        }
 
         //imitation of return of transmitted json
 //        Gson gson = new Gson();
@@ -77,22 +77,5 @@ public class PacketDecoder {
     }
 
 
-    private static byte[] decryptMessage(final byte[] message) {
-        try {
-            cipher.init(Cipher.DECRYPT_MODE, key);
 
-        } catch (InvalidKeyException e) {
-            e.printStackTrace();
-        }
-
-
-        try {
-            return cipher.doFinal(message);
-        } catch (IllegalBlockSizeException e) {
-            e.printStackTrace();
-        } catch (BadPaddingException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
 }
