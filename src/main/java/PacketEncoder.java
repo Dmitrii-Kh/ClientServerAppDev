@@ -1,14 +1,10 @@
-import org.apache.commons.codec.DecoderException;
 import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidKeyException;
-import java.security.Key;
+
 
 public class PacketEncoder {
-
 
 
     public static byte[] encode(byte source, long packetId, int commandType, int userId, String message) {
@@ -48,6 +44,5 @@ public class PacketEncoder {
                 .put(myMessage).putShort(CRC16.evaluateCrc(myMessage, 0, myMessage.length)).array();
 
     }
-
 
 }

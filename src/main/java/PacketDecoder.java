@@ -1,10 +1,8 @@
 import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.security.InvalidKeyException;
-import java.security.Key;
+
 
 public class PacketDecoder {
 
@@ -33,7 +31,7 @@ public class PacketDecoder {
 
         byte[] message = new byte[messageLength];
         System.arraycopy(inputMessage, 16, message, 0, messageLength);
-        System.out.println("Message from client (deprecated) : " + new String(message));
+        System.out.println("Message from client (encrypted) : " + new String(message));
 
         final short crc2 = ByteBuffer.wrap(inputMessage, 16 + messageLength, 2).order(ByteOrder.BIG_ENDIAN).getShort();
         System.out.println("CRC2 : " + crc2);
@@ -75,7 +73,4 @@ public class PacketDecoder {
 
         System.out.println("Useful Data from client : " + new String(decryptedMessage));
     }
-
-
-
 }

@@ -2,12 +2,14 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="757bf134-5992-43ad-b00f-c4683bffac64" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/src/main/java/PacketDecoder.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/PacketEncoder.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/PacketDecoder.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/PacketDecoder.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/PacketEncoder.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/PacketEncoder.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/test/java/MainTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/MainTest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/target/classes/Main.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/Main.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/PacketDecoder.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/PacketDecoder.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/PacketEncoder.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/PacketEncoder.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/target/test-classes/MainTest.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/test-classes/MainTest.class" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -59,13 +61,6 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="PacketEncoder" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="PacketEncoder" />
-      <module name="ClientServerAppDev1" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
     <configuration name="MainTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="ClientServerAppDev1" />
       <option name="PACKAGE_NAME" value="" />
@@ -85,6 +80,16 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+    <configuration name="MainTest.shouldPass_whenValidPacketLength" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="ClientServerAppDev1" />
+      <option name="PACKAGE_NAME" value="" />
+      <option name="MAIN_CLASS_NAME" value="MainTest" />
+      <option name="METHOD_NAME" value="shouldPass_whenValidPacketLength" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="MainTest.shouldPass_whenValidPacketSource" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="ClientServerAppDev1" />
       <option name="PACKAGE_NAME" value="" />
@@ -99,9 +104,9 @@
       <list>
         <item itemvalue="Application.Main" />
         <item itemvalue="JUnit.MainTest" />
+        <item itemvalue="JUnit.MainTest.shouldPass_whenValidPacketLength" />
         <item itemvalue="JUnit.MainTest.shouldPass_whenValidPacketSource" />
         <item itemvalue="JUnit.MainTest.shouldPass_whenValidInputMessage" />
-        <item itemvalue="Application.PacketEncoder" />
       </list>
     </recent_temporary>
   </component>

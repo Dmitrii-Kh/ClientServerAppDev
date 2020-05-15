@@ -13,26 +13,21 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class MainTest {
 
-
-    ByteBuffer buffer;
-    private static byte[] byteArr;
-
+    private static byte[] packet;
+    private static String message;
+    private static ByteBuffer buffer;
 
     @BeforeAll
     static void init() {
-        byteArr = PacketEncoder.encode((byte) 0, 1, 777, 21, "Hello World!");
+        message = "Hello World!";
+        packet = PacketEncoder.encode((byte) 0, 1, 777, 21, message);
+        buffer = ByteBuffer.wrap(packet);
     }
 
     @Test
         //check for validity of CRC1 & CRC2
     void shouldPass_whenValidInputMessage() {
-        PacketDecoder.decodePacket(byteArr);
-    }
-
-    @Test
-        //check for validity of CRC1 & CRC2
-    void shouldPass_whenValidInputMessag() {
-        PacketDecoder.decodePacket(byteArr);
+        PacketDecoder.decodePacket(packet);
     }
 
     @Test
@@ -42,8 +37,22 @@ public class MainTest {
 
     @Test
     void shouldPass_whenValidPacketSource() {
-        buffer = ByteBuffer.wrap(byteArr);
         assertEquals(0, buffer.get(1), "Invalid packet source!");
+    }
+
+    @Test
+    void shouldPass_whenValidPacketId() {
+        assertEquals(1, buffer.getLong(2), "Invalid packet id!");
+    }
+
+    @Test
+    void shouldPass_whenValidCommandType() {
+        assertEquals(777, buffer.getInt(16), "Invalid command type!");
+    }
+
+    @Test
+    void shouldPass_whenValidUserId() {
+        assertEquals(21, buffer.getInt(20), "Invalid user id!");
     }
 
     @Test
@@ -66,7 +75,6 @@ public class MainTest {
 
         //break header
         packet[10] = (byte) (packet[10] - 1);
-
         assertThrows(IllegalArgumentException.class, () -> PacketDecoder.decodePacket(packet));
     }
 
@@ -76,31 +84,6 @@ public class MainTest {
 
         //break message
         packet[packet.length - 3] = (byte) (packet[packet.length - 3] - 1);
-
-
         assertThrows(IllegalArgumentException.class, () -> PacketDecoder.decodePacket(packet));
     }
-
-
-/*
-    private boolean areArraysEqual(final byte[] arr1, final byte[] arr2){
-      boolean res = true;
-        for (int i = 0; i < arr1.length; ++i) {
-            res &= arr1[i] == arr2[i];
-        }
-        return res;
-    }
-
-    @Test
-    void shouldPass_whenEncryptedDecryptedCorrectly(){
-        Main.initCipher();  //todo make private
-        Main.initKey();
-
-        final String usefulData   = "Useful data";
-        final byte[] messageBytes = usefulData.getBytes(StandardCharsets.UTF_8);
-        final byte[] messageEncryptedDecrypted = Main.decryptMessage(Main.encryptMessage(messageBytes));
-        assertTrue(areArraysEqual(messageBytes, messageEncryptedDecrypted));
-    }
-    */
-
 }
