@@ -1,3 +1,7 @@
+package lab01;
+
+import lab01.CRC16;
+
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import java.nio.ByteBuffer;

@@ -1,3 +1,5 @@
+package lab01;
+
 import javax.crypto.*;
 import java.security.InvalidKeyException;
 import java.security.Key;

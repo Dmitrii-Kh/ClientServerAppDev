@@ -1,3 +1,8 @@
+package TestLab01;
+
+import lab01.Cryptor;
+import lab01.PacketDecoder;
+import lab01.PacketEncoder;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.junit.jupiter.api.BeforeAll;
@@ -61,7 +66,7 @@ public class MainTest {
 
         try {
             assertEquals(message, new String(Cryptor.decryptMessage(Cryptor.encryptMessage(message.getBytes("UTF-8")))),
-                    "Cryptor doesn't work");
+                    "lab01.Cryptor doesn't work");
         } catch (BadPaddingException e) {
             e.printStackTrace();
         } catch (IllegalBlockSizeException e) {
