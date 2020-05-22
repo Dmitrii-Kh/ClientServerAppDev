@@ -1,3 +1,5 @@
+package lab01;
+
 public class CRC16 {
 
     static int[] table = {
