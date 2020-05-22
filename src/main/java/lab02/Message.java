@@ -1,11 +1,12 @@
 package lab02;
 
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
 import java.nio.ByteBuffer;
 
 
 public class Message {
-
-
 
 
     enum cTypes {
@@ -57,13 +58,9 @@ public class Message {
 
 
     public Message(Integer cType, Integer bUserId, String message) {
-
         this.cType = cType;
-
         this.bUserId = bUserId;
-
         this.message = message;
-
     }
 
 
@@ -71,44 +68,36 @@ public class Message {
     public byte[] toPacketPart() {
 
         return ByteBuffer.allocate(getMessageBytesLength())
-
                 .putInt(cType)
-
                 .putInt(bUserId)
-
                 .put(message.getBytes()).array();
-
     }
 
 
 
     public int getMessageBytesLength() {
-
         return BYTES_WITHOUT_MESSAGE + getMessageBytes();
-
     }
-
 
 
     public Integer getMessageBytes() {
-
         return message.length();
-
     }
 
 
 
-    public void encode() {
+    public void encode() throws BadPaddingException, IllegalBlockSizeException {
 
        // message = Cipher.encode(message);
-
+        message = new String(Cryptor.encryptMessage(message.getBytes()));
     }
 
 
 
-    public void decode() {
+    public void decode() throws BadPaddingException, IllegalBlockSizeException {
 
         //message = Cipher.decode(message);
+        message = new String(Cryptor.decryptMessage(message.getBytes()));
 
     }
 
