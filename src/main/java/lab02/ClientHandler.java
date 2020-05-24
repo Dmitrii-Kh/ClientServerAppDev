@@ -23,10 +23,10 @@ public class ClientHandler implements Runnable {
         //todo packetBytes.get(..) << 8 * ..) -> ByteBuffer (big-endian)
         try {
 
-            Integer wLen             = 0;
+            Integer wLen = 0;
 //            Boolean packetIncomplete = true;
 
-            InputStream  input  = clientSocket.getInputStream();
+            InputStream input = clientSocket.getInputStream();
             OutputStream output = clientSocket.getOutputStream();
 
             byte[] oneByte = new byte[1];
@@ -77,7 +77,7 @@ public class ClientHandler implements Runnable {
 //                        packetIncomplete = false;
                         break;
 
-                    }else {
+                    } else {
                         wLen = 0;
                         packetBytes = null;
                         resetToFirstBMagic(inputStreamBytes, bMagicIndexes);
@@ -86,6 +86,7 @@ public class ClientHandler implements Runnable {
             }
 
             //todo Process(new Packet(packetBytes));
+            //new Processor(new Packet(packetBytes).getBMsq());
 
 
             //todo try-finally closing
@@ -94,11 +95,13 @@ public class ClientHandler implements Runnable {
             output.close();
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
     }
 
-    private void resetToFirstBMagic(ArrayList<Byte> inputStreamBytes, LinkedList<Integer> bMagicIndexes){
+    private void resetToFirstBMagic(ArrayList<Byte> inputStreamBytes, LinkedList<Integer> bMagicIndexes) {
         //todo notify client
 
         //reset to first bMagic if exists

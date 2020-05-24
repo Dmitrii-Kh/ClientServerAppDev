@@ -4,10 +4,10 @@ package lab02;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 
 public class Message {
-
 
     enum cTypes {
         GET_PRODUCT_COUNT,
@@ -18,87 +18,74 @@ public class Message {
         ADD_PRODUCT_TO_GROUP
     }
 
-
-
     Integer cType;
     Integer bUserId;
     String message;
+    private byte[] encryptedMessageInBytes;
+    public static final int BYTES_WITHOUT_MESSAGE = Integer.BYTES + Integer.BYTES;
 
+
+    public byte[] getEncryptedMessageInBytes() {
+        return encryptedMessageInBytes;
+    }
+    public void setEncryptedMessageInBytes(byte[] encryptedMessageInBytes) {
+        this.encryptedMessageInBytes = encryptedMessageInBytes;
+    }
 
     public void setCType(int cType) {
         this.cType = cType;
     }
-
     public int getCType() {
         return cType;
     }
 
-
     public void setBUserId(int bUserId) {
         this.bUserId = bUserId;
     }
-
     public int getBUserId() {
         return bUserId;
-    }
-
-
-    public void setMessage(String message) {
-        this.message = message;
     }
 
     public String getMessage() {
         return message;
     }
 
-    public static final int BYTES_WITHOUT_MESSAGE = Integer.BYTES + Integer.BYTES;
-
 
     public Message() { }
 
-
-    public Message(Integer cType, Integer bUserId, String message) {
+    public Message(Integer cType, Integer bUserId, String message) throws BadPaddingException, IllegalBlockSizeException {
         this.cType = cType;
         this.bUserId = bUserId;
         this.message = message;
+        encode();
     }
-
 
 
     public byte[] toPacketPart() {
-
-        return ByteBuffer.allocate(getMessageBytesLength())
+        return ByteBuffer.allocate(fullMessageBytesLength())
                 .putInt(cType)
                 .putInt(bUserId)
-                .put(message.getBytes()).array();
+                .put(encryptedMessageInBytes).array();
     }
 
 
 
-    public int getMessageBytesLength() {
-        return BYTES_WITHOUT_MESSAGE + getMessageBytes();
-    }
-
-
-    public Integer getMessageBytes() {
-        return message.length();
-    }
-
+    public int fullMessageBytesLength() {return encryptedMessageInBytes.length + BYTES_WITHOUT_MESSAGE; }
+    public int messageBytesLength() {return encryptedMessageInBytes.length; }
 
 
     public void encode() throws BadPaddingException, IllegalBlockSizeException {
 
-       // message = Cipher.encode(message);
-        message = new String(Cryptor.encryptMessage(message.getBytes()));
+        byte[] myMes = message.getBytes(StandardCharsets.UTF_8);
+        encryptedMessageInBytes = Cryptor.encryptMessage(myMes);
     }
 
 
 
-    public void decode() throws BadPaddingException, IllegalBlockSizeException {
+    public void decode() throws BadPaddingException, IllegalBlockSizeException{
 
-        //message = Cipher.decode(message);
-        message = new String(Cryptor.decryptMessage(message.getBytes()));
-
+        byte[] decryptedMessage = Cryptor.decryptMessage(encryptedMessageInBytes);
+        message = new String(decryptedMessage);
     }
 
 }

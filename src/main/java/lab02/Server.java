@@ -13,7 +13,7 @@ public class Server extends Thread {
 
     //    private ThreadPoolExecutor executor  = (ThreadPoolExecutor) Executors.newFixedThreadPool(10);
     private ExecutorService executor = Executors.newFixedThreadPool(10);
-    private int             port;
+    private int port;
 
     public Server(int port) {
         this.port = port;
