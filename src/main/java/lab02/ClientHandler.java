@@ -5,40 +5,69 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 public class ClientHandler implements Runnable {
 
-    private Socket clientSocket;
-//    private OutputStream clientOutputStream;
-//    private InputStream  clientInputStream;
+    private Socket       clientSocket;
+    private OutputStream output;
+    private InputStream  input;
 
-    public ClientHandler(Socket clientSocket) {
+    private int maxTimeout;
+    private TimeUnit timeUnit;
+
+    private ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(3);
+
+    ArrayList<Byte>     inputStreamBytes = new ArrayList<>(Packet.HEADER_LENGTH * 3);
+    LinkedList<Integer> bMagicIndexes    = new LinkedList<>();
+
+
+    public ClientHandler(Socket clientSocket, int maxTimeout, TimeUnit timeUnit) throws IOException {
+        if(maxTimeout <= 0)
+            throw new IllegalArgumentException("maxTimeout should be > 0");
+
         this.clientSocket = clientSocket;
+        input = clientSocket.getInputStream();
+        output = clientSocket.getOutputStream();
+
+        this.maxTimeout = maxTimeout;
+        this.timeUnit = timeUnit;
     }
 
 
     @Override
     public void run() {
-
-        //todo packetBytes.get(..) << 8 * ..) -> ByteBuffer (big-endian)
+        Thread.currentThread().setName(Thread.currentThread().getName() + " - ClientHandler");
         try {
-
-            Integer wLen             = 0;
-//            Boolean packetIncomplete = true;
-
-            InputStream  input  = clientSocket.getInputStream();
-            OutputStream output = clientSocket.getOutputStream();
-
+            int    wLen    = 0;
             byte[] oneByte = new byte[1];
 
-            ArrayList<Byte> inputStreamBytes = new ArrayList<>(Packet.HEADER_LENGTH * 3);
-
-            LinkedList<Integer> bMagicIndexes = new LinkedList<>();
 
             byte[] packetBytes = null;
 
+            boolean newData = true;
 
-            while (packetBytes == null && (input.read(oneByte)) != -1) {
+
+            while (true) {
+                if(input.available() == 0){
+                    if(!newData){
+                        break;
+                    }
+                    newData = false;
+
+                    try {
+                        timeUnit.sleep(maxTimeout);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    continue;
+                }
+
+
+                input.read(oneByte);
+                newData = true;
 
                 if (Packet.B_MAGIC.equals(oneByte[0])) {
                     bMagicIndexes.add(inputStreamBytes.size());
@@ -47,59 +76,66 @@ public class ClientHandler implements Runnable {
 
                 //check header
                 if (inputStreamBytes.size() == Packet.HEADER_LENGTH) {
-                    Integer wCrc16_1 =
-                            (inputStreamBytes.get(inputStreamBytes.size() - 2) << 8) | inputStreamBytes.get(inputStreamBytes.size() - 1);
-
+                    final short wCrc16_1 = (short) ((inputStreamBytes.get(inputStreamBytes.size() - 2) << 8) |
+                            inputStreamBytes.get(inputStreamBytes.size() - 1));
 
                     final short crc1Evaluated =
                             CRC16.evaluateCrc(toPrimitiveByteArr(inputStreamBytes.toArray(new Byte[0])), 0, 14);
 
                     if (wCrc16_1 == crc1Evaluated) {
-
                         wLen = (inputStreamBytes.get(10) << 8 * 3) | (inputStreamBytes.get(11) << 8 * 2) |
                                 (inputStreamBytes.get(12) << 8) | inputStreamBytes.get(13);
 
                     } else {
-                        resetToFirstBMagic(inputStreamBytes, bMagicIndexes);
+                        resetToFirstBMagic();
                     }
-
 
                     //check message if no errors in header
                 } else if (inputStreamBytes.size() == Packet.HEADER_LENGTH + wLen + Packet.CRC16_LENGTH) {
-                    final Integer wCrc16_2 =
-                            (inputStreamBytes.get(inputStreamBytes.size() - 2) << 8) | inputStreamBytes.get(inputStreamBytes.size() - 1);
+                    final int wCrc16_2 = (inputStreamBytes.get(inputStreamBytes.size() - 2) << 8) |
+                            inputStreamBytes.get(inputStreamBytes.size() - 1);
 
                     packetBytes = toPrimitiveByteArr(inputStreamBytes.toArray(new Byte[0]));
-                    final short crc2Evaluated = CRC16.evaluateCrc(packetBytes,
-                            Packet.HEADER_LENGTH, inputStreamBytes.size() - Packet.CRC16_LENGTH);
+                    final short crc2Evaluated = CRC16.evaluateCrc(packetBytes, Packet.HEADER_LENGTH,
+                            inputStreamBytes.size() - Packet.CRC16_LENGTH);
 
                     if (wCrc16_2 == crc2Evaluated) {
-//                        packetIncomplete = false;
-                        break;
+                        inputStreamBytes.clear();
+                        bMagicIndexes.clear();
 
-                    }else {
+                    } else {
                         wLen = 0;
                         packetBytes = null;
-                        resetToFirstBMagic(inputStreamBytes, bMagicIndexes);
+                        resetToFirstBMagic();
                     }
                 }
+
+
+                if(packetBytes != null){
+                    //todo Process(new Packet(packetBytes));
+
+                }
             }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                send(toPrimitiveByteArr(inputStreamBytes.toArray(new Byte[0])));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            shutdown();
+        }
+    }
 
-            //todo Process(new Packet(packetBytes));
 
-
-            //todo try-finally closing
-            clientSocket.close();
-            input.close();
-            output.close();
+    private void resetToFirstBMagic() {
+        //todo notify client
+        try {
+            send("!!!bad packet".getBytes());
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-    }
-
-    private void resetToFirstBMagic(ArrayList<Byte> inputStreamBytes, LinkedList<Integer> bMagicIndexes){
-        //todo notify client
 
         //reset to first bMagic if exists
         if (!bMagicIndexes.isEmpty()) {
@@ -128,6 +164,37 @@ public class ClientHandler implements Runnable {
         }
 
         return primitiveArr;
+    }
+
+
+    public void shutdown() {
+        //todo shutdown
+        System.out.println(Thread.currentThread().getName() + " shutdown");
+        if(executor.getActiveCount() > 0) {
+            try {
+                executor.awaitTermination(2, TimeUnit.MINUTES);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }else {
+            executor.shutdown();
+        }
+
+        try {
+            try {
+                input.close();
+                output.close();
+            } finally {
+                clientSocket.close();
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void send(byte[] msg) throws IOException {
+        output.write(msg);
     }
 
 

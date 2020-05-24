@@ -6,17 +6,20 @@ import java.net.SocketException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 public class Server extends Thread {
 
     public ServerSocket server;
 
     //    private ThreadPoolExecutor executor  = (ThreadPoolExecutor) Executors.newFixedThreadPool(10);
-    private ExecutorService executor = Executors.newFixedThreadPool(10);
+    private ThreadPoolExecutor executor = (ThreadPoolExecutor)Executors.newFixedThreadPool(10);
     private int             port;
 
-    public Server(int port) {
+    public Server(int port) throws IOException {
+        super("Server");
         this.port = port;
+        server = new ServerSocket(port);
     }
 
 
@@ -24,11 +27,10 @@ public class Server extends Thread {
     public void run() {
 
         try {
-            server = new ServerSocket(port);
             System.out.println("Server running on port: " + port);
 
             while (true) {
-                executor.execute(new ClientHandler(server.accept()));
+                executor.execute(new ClientHandler(server.accept(), 1, TimeUnit.SECONDS));
             }
 
         } catch (SocketException e) {
