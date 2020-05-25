@@ -9,7 +9,7 @@ import java.nio.charset.StandardCharsets;
 
 public class Message {
 
-    enum cTypes {
+    public enum cTypes {
         GET_PRODUCT_AMOUNT,
         GET_PRODUCT,
         ADD_PRODUCT,
@@ -53,8 +53,8 @@ public class Message {
 
     public Message() { }
 
-    public Message(Integer cType, Integer bUserId, String message) throws BadPaddingException, IllegalBlockSizeException {
-        this.cType = cType;
+    public Message(cTypes cType, Integer bUserId, String message) throws BadPaddingException, IllegalBlockSizeException {
+        this.cType = cType.ordinal();
         this.bUserId = bUserId;
         this.message = message;
         encode();
