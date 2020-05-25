@@ -10,12 +10,12 @@ import java.nio.charset.StandardCharsets;
 public class Message {
 
     enum cTypes {
-        GET_PRODUCT_COUNT,
+        GET_PRODUCT_AMOUNT,
         GET_PRODUCT,
         ADD_PRODUCT,
-        ADD_PRODUCT_TITLE,
-        SET_PRODUCT_PRICE,
-        ADD_PRODUCT_TO_GROUP
+        ADD_PRODUCT_GROUP,
+        ADD_PRODUCT_TITLE_TO_GROUP,
+        SET_PRODUCT_PRICE
     }
 
     Integer cType;
