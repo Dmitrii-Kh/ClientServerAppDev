@@ -6,17 +6,18 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 
 
-public class Processor extends Thread {
+public class Processor /*extends Thread*/ {
 
-    Message message;
+//    Packet inputPacket;
+//
+//    public Processor(Packet inputPacket) {
+//        this.inputPacket = inputPacket;
+//    }
 
-    public Processor(Message message) {
-        this.message = message;
-        this.start();
-    }
 
+    public static Packet process(Packet inputPacket) /*throws Exception*/throws BadPaddingException, IllegalBlockSizeException {
 
-    public void process(Message message) throws Exception {
+        Message message = inputPacket.getBMsq();
         Message answerMessage = null;
         String answer;
 
@@ -29,22 +30,22 @@ public class Processor extends Thread {
             answerMessage = new Message(0, 0, answer);
         }
 
-        Packet answerPacket = new Packet((byte) 2, UnsignedLong.ONE, answerMessage);
-        Sender.sendMessage(answerPacket.toPacket());
+        Packet answerPacket = new Packet(inputPacket.bSrc, inputPacket.bPktId, answerMessage);
+        return answerPacket;
     }
 
-    @Override
-    public void run() {
-        try {
-            process(message);
-        } catch (BadPaddingException e) {
-            e.printStackTrace();
-        } catch (IllegalBlockSizeException e) {
-            e.printStackTrace();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+//    @Override
+//    public void run() {
+//        try {
+//            process(inputPacket);
+//        } catch (BadPaddingException e) {
+//            e.printStackTrace();
+//        } catch (IllegalBlockSizeException e) {
+//            e.printStackTrace();
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//    }
 
     public static void main(String[] args) throws Exception {
         //todo packet transmitted through network -->
@@ -60,10 +61,10 @@ public class Processor extends Thread {
         Packet newPac = new Packet(pac.toPacket());
         //Packet newPac2 = new Packet(pac2.toPacket());
 
-        Processor pr = new Processor(newPac.getBMsq());
+//        Processor pr = new Processor(newPac);
         //Processor pr2 = new Processor(newPac2.getBMsq());
 
-        pr.join();
+//        pr.join();
         //pr2.join();
     }
 }

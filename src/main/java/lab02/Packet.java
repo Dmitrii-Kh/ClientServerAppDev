@@ -44,14 +44,14 @@ public class Packet {
 
 
 
-    public Packet(byte[] encodedPacket) throws Exception {
+    public Packet(byte[] encodedPacket) /*throws Exception */throws BadPaddingException, IllegalBlockSizeException {
 
         ByteBuffer buffer = ByteBuffer.wrap(encodedPacket);
 
         Byte expectedBMagic = buffer.get();
 
-        if (!expectedBMagic.equals(B_MAGIC))
-            throw new Exception("Unexpected bMagic");
+//        if (!expectedBMagic.equals(B_MAGIC))
+//            throw new Exception("Unexpected bMagic");
 
 
 
@@ -62,9 +62,9 @@ public class Packet {
         wCrc16_1 = buffer.getShort();
 
         final short crc1Evaluated = CRC16.evaluateCrc(encodedPacket, 0, 14);
-        if (crc1Evaluated != wCrc16_1) {
-            throw new IllegalArgumentException("CRC1 expected : " + crc1Evaluated + ", but was : " + wCrc16_1);
-        }
+//        if (crc1Evaluated != wCrc16_1) {
+//            throw new IllegalArgumentException("CRC1 expected : " + crc1Evaluated + ", but was : " + wCrc16_1);
+//        }
 
         bMsq = new Message();
         bMsq.setCType(buffer.getInt());
@@ -83,14 +83,14 @@ public class Packet {
         System.arraycopy(encodedPacket, 16, messageToEvaluate, 0, wLen);
 
         final short crc2Evaluated = CRC16.evaluateCrc(messageToEvaluate, 0, wLen);
-        if (crc2Evaluated != wCrc16_2) {
-            throw new IllegalArgumentException("CRC2 expected : " + crc2Evaluated + ", but was : " + wCrc16_2);
-        }
+//        if (crc2Evaluated != wCrc16_2) {
+//            throw new IllegalArgumentException("CRC2 expected : " + crc2Evaluated + ", but was : " + wCrc16_2);
+//        }
     }
 
 
 
-    public byte[] toPacket() throws BadPaddingException, IllegalBlockSizeException {
+    public byte[] toPacket() {
 
         Message message = getBMsq();
 
