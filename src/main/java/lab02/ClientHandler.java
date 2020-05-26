@@ -46,6 +46,10 @@ public class ClientHandler implements Runnable {
             }
         } catch (TimeoutException e) {
             System.out.println("client timeout");
+        } catch (BadPaddingException e) {
+            e.printStackTrace();
+        } catch (IllegalBlockSizeException e) {
+            e.printStackTrace();
         } finally {
             shutdown();
         }

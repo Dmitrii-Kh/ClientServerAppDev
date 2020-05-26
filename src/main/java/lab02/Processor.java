@@ -30,6 +30,9 @@ public class Processor /*extends Thread*/ {
         } else if (message.getCType() == Message.cTypes.ADD_PRODUCT_GROUP.ordinal()) {
             answer = message.getMessage() + " ADD_PRODUCT_GROUP!";
             answerMessage = new Message(Message.cTypes.ADD_PRODUCT_GROUP, 0, answer);
+        } else if (message.getCType() == Message.cTypes.EXCEPTION_FROM_SERVER.ordinal()) {
+            answer = message.getMessage();
+            answerMessage = new Message(Message.cTypes.ADD_PRODUCT_GROUP, 0, answer);
         } else {
             answer = message.getMessage() + " OK!";
             answerMessage = new Message(Message.cTypes.ADD_PRODUCT_GROUP, 0, answer);
@@ -58,19 +61,19 @@ public class Processor /*extends Thread*/ {
 //        Message mes = new Message(1, 1, "Josh");
 //        Packet pac = new Packet((byte) 2, UnsignedLong.ONE, mes);
 
-        //Message mes2 = new Message(2,1,"Tom");
-        //Packet pac2 = new Packet((byte)2, UnsignedLong.ONE, mes2);
+    //Message mes2 = new Message(2,1,"Tom");
+    //Packet pac2 = new Packet((byte)2, UnsignedLong.ONE, mes2);
 
-        //todo this block runs in ClientHandler:
-        //todo incoming byte array -->
+    //todo this block runs in ClientHandler:
+    //todo incoming byte array -->
 
 //        Packet newPac = new Packet(pac.toPacket());
-        //Packet newPac2 = new Packet(pac2.toPacket());
+    //Packet newPac2 = new Packet(pac2.toPacket());
 
 //        Processor pr = new Processor(newPac);
-        //Processor pr2 = new Processor(newPac2.getBMsq());
+    //Processor pr2 = new Processor(newPac2.getBMsq());
 
 //        pr.join();
-        //pr2.join();
+    //pr2.join();
 //    }
 }

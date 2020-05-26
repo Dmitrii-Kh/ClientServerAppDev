@@ -1,5 +1,9 @@
 package lab02;
 
+import com.google.common.primitives.UnsignedLong;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,7 +41,7 @@ public class Network {
      * @throws IOException
      * @throws TimeoutException if no data received after {@code maxTimeout}
      */
-    public byte[] receive() throws IOException, TimeoutException {
+    public byte[] receive() throws IOException, TimeoutException, BadPaddingException, IllegalBlockSizeException {
         synchronized (inputStreamLock) {
             int    wLen    = 0;
             byte[] oneByte = new byte[1];
@@ -104,8 +108,10 @@ public class Network {
                                 .put(receivedBytes.get(12)).put(receivedBytes.get(13)).rewind().getInt();
 
                     } else {
-//                        System.out.println("header reset");
+//                      System.out.println("header reset");
                         resetToFirstBMagic();
+                        Packet ansPac = new Packet((byte) 0, UnsignedLong.ONE, new Message(Message.cTypes.EXCEPTION_FROM_SERVER,0, "Corrupted header!"));
+                        return ansPac.toPacket();
                     }
                 }
             }
