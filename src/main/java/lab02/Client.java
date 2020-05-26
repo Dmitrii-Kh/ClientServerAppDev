@@ -1,20 +1,28 @@
 package lab02;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class Client extends Thread {
 
-    Socket       socket;
-    InputStream  input;
-    OutputStream output;
+    private Socket       socket;
+    private InputStream  input;
+    private OutputStream output;
+
+    private Packet packet;
 
     private int port;
 
-    public Client(int port) {
+    public Client(int port, Packet packet) {
         this.port = port;
+        this.packet = packet;
     }
 
     @Override
@@ -26,23 +34,31 @@ public class Client extends Thread {
                 socket = new Socket("localhost", port);
                 input = socket.getInputStream();
                 output = socket.getOutputStream();
-                System.out.println(Thread.currentThread().getName() +  " - client starts");
 
-//                output.write(Thread.currentThread().getName().getBytes());
-                output.write((Thread.currentThread().getId() + "").getBytes());
+                Network network = new Network(input, output,5, TimeUnit.SECONDS);
+
+
+                network.send(packet.toPacket());
+
+                System.out.println(Thread.currentThread().getName() +  " - client starts");
 
 //                output.flush();
 //                System.out.println("client flushed");
 
-                byte[] bytes = new byte[400];
-                input.read(bytes);
-
-
-                System.out.println(Thread.currentThread().getName() +  " - answer from server: " + new String(bytes));
-
-                input.close();
-                output.close();
-
+                try {
+                    byte[] packetBytes = network.receive();
+                    Packet packet = new Packet(packetBytes);
+                    System.out.println(Thread.currentThread().getName() +  " - answer from server: " + packet.bMsq.message);
+                } catch (TimeoutException e) {
+                    System.out.println("server timeout");
+                } catch (BadPaddingException e) {
+                    e.printStackTrace();
+                } catch (IllegalBlockSizeException e) {
+                    e.printStackTrace();
+                } finally {
+                    input.close();
+                    output.close();
+                }
             } finally {
                 socket.close();
             }
