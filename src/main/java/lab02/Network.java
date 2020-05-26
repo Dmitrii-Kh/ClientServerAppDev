@@ -111,7 +111,8 @@ public class Network {
 //                      System.out.println("header reset");
                         resetToFirstBMagic();
                         Packet ansPac = new Packet((byte) 0, UnsignedLong.ONE, new Message(Message.cTypes.EXCEPTION_FROM_SERVER,0, "Corrupted header!"));
-                        return ansPac.toPacket();
+//                        return ansPac.toPacket();
+                        send(ansPac.toPacket());
                     }
                 }
             }

@@ -30,12 +30,9 @@ public class Processor /*extends Thread*/ {
         } else if (message.getCType() == Message.cTypes.ADD_PRODUCT_GROUP.ordinal()) {
             answer = message.getMessage() + " ADD_PRODUCT_GROUP!";
             answerMessage = new Message(Message.cTypes.ADD_PRODUCT_GROUP, 0, answer);
-        } else if (message.getCType() == Message.cTypes.EXCEPTION_FROM_SERVER.ordinal()) {
-            answer = message.getMessage();
-            answerMessage = new Message(Message.cTypes.ADD_PRODUCT_GROUP, 0, answer);
         } else {
             answer = message.getMessage() + " OK!";
-            answerMessage = new Message(Message.cTypes.ADD_PRODUCT_GROUP, 0, answer);
+            answerMessage = new Message(Message.cTypes.OK, 0, answer);
         }
 
         Packet answerPacket = new Packet(inputPacket.bSrc, inputPacket.bPktId, answerMessage);

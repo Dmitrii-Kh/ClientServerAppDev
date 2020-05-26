@@ -16,7 +16,8 @@ public class Message {
         ADD_PRODUCT_GROUP,
         ADD_PRODUCT_TITLE_TO_GROUP,
         SET_PRODUCT_PRICE,
-        EXCEPTION_FROM_SERVER
+        EXCEPTION_FROM_SERVER,
+        OK
     }
 
     Integer cType;

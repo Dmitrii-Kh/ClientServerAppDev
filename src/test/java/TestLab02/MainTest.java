@@ -143,7 +143,7 @@ public class MainTest {
         server.start();
 
         Socket socket = new Socket("localhost", port);
-        ;
+
         InputStream input = socket.getInputStream();
         OutputStream output = socket.getOutputStream();
         Packet packet1 = new Packet((byte) 1, UnsignedLong.ONE, new Message(Message.cTypes.ADD_PRODUCT_GROUP, 1, "client1"));
@@ -165,7 +165,7 @@ public class MainTest {
         server.start();
 
         Socket socket = new Socket("localhost", port);
-        ;
+
         InputStream input = socket.getInputStream();
         OutputStream output = socket.getOutputStream();
         Packet packet1 = new Packet((byte) 1, UnsignedLong.ONE, new Message(Message.cTypes.ADD_PRODUCT_GROUP, 1, "client1"));

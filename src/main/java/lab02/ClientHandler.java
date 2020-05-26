@@ -40,7 +40,7 @@ public class ClientHandler implements Runnable {
 
         } catch (IOException e) {
             if (e.getMessage().equals("Stream closed.")) {
-                //todo notify client
+                //todo notify client?
             } else {
                 e.printStackTrace();
             }
