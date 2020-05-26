@@ -28,7 +28,7 @@ public class Cryptor {
         }
     }
 
-    public static byte[] decryptMessage(final byte[] message) throws BadPaddingException, IllegalBlockSizeException {
+    public synchronized static byte[] decryptMessage(final byte[] message) throws BadPaddingException, IllegalBlockSizeException {
         try {
             cipher.init(Cipher.DECRYPT_MODE, key);
 
@@ -39,7 +39,7 @@ public class Cryptor {
         return cipher.doFinal(message);
     }
 
-    public static byte[] encryptMessage(final byte[] message) throws BadPaddingException, IllegalBlockSizeException {
+    public synchronized static byte[] encryptMessage(final byte[] message) throws BadPaddingException, IllegalBlockSizeException {
         try {
             cipher.init(Cipher.ENCRYPT_MODE, key);
 

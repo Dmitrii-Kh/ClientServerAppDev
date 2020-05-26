@@ -30,7 +30,7 @@ public class Server extends Thread {
             System.out.println("Server running on port: " + port);
 
             while (true) {
-                executor.execute(new ClientHandler(server.accept(), 1, TimeUnit.SECONDS));
+                executor.execute(new ClientHandler(server.accept(), 2, TimeUnit.SECONDS));
             }
 
         } catch (SocketException e) {

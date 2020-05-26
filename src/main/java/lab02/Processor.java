@@ -21,16 +21,22 @@ public class Processor /*extends Thread*/ {
         Message answerMessage = null;
         String answer;
 
-        if (message.getCType() == 1) {
-            answer = message.getMessage() + " added successfully!";
-            answerMessage = new Message(0, 0, answer);
+//        System.out.println("processing");
 
-        } else if (message.getCType() == 2) {
-            answer = message.getMessage() + " deleted successfully!";
-            answerMessage = new Message(0, 0, answer);
+        if (message.getCType() == Message.cTypes.ADD_PRODUCT.ordinal()) {
+            answer = message.getMessage() + " ADD_PRODUCT!";
+            answerMessage = new Message(Message.cTypes.ADD_PRODUCT, 0, answer);
+
+        } else if (message.getCType() == Message.cTypes.ADD_PRODUCT_GROUP.ordinal()) {
+            answer = message.getMessage() + " ADD_PRODUCT_GROUP!";
+            answerMessage = new Message(Message.cTypes.ADD_PRODUCT_GROUP, 0, answer);
+        } else {
+            answer = message.getMessage() + " OK!";
+            answerMessage = new Message(Message.cTypes.ADD_PRODUCT_GROUP, 0, answer);
         }
 
         Packet answerPacket = new Packet(inputPacket.bSrc, inputPacket.bPktId, answerMessage);
+//        System.out.println("end processing");
         return answerPacket;
     }
 
@@ -47,10 +53,10 @@ public class Processor /*extends Thread*/ {
 //        }
 //    }
 
-    public static void main(String[] args) throws Exception {
-        //todo packet transmitted through network -->
-        Message mes = new Message(1, 1, "Josh");
-        Packet pac = new Packet((byte) 2, UnsignedLong.ONE, mes);
+//    public static void main(String[] args) throws Exception {
+//        //todo packet transmitted through network -->
+//        Message mes = new Message(1, 1, "Josh");
+//        Packet pac = new Packet((byte) 2, UnsignedLong.ONE, mes);
 
         //Message mes2 = new Message(2,1,"Tom");
         //Packet pac2 = new Packet((byte)2, UnsignedLong.ONE, mes2);
@@ -58,7 +64,7 @@ public class Processor /*extends Thread*/ {
         //todo this block runs in ClientHandler:
         //todo incoming byte array -->
 
-        Packet newPac = new Packet(pac.toPacket());
+//        Packet newPac = new Packet(pac.toPacket());
         //Packet newPac2 = new Packet(pac2.toPacket());
 
 //        Processor pr = new Processor(newPac);
@@ -66,5 +72,5 @@ public class Processor /*extends Thread*/ {
 
 //        pr.join();
         //pr2.join();
-    }
+//    }
 }

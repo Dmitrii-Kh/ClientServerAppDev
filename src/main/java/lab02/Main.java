@@ -1,5 +1,9 @@
 package lab02;
 
+import com.google.common.primitives.UnsignedLong;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
 import java.io.IOException;
 
 
@@ -16,7 +20,7 @@ public class Main {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        server.setDaemon(true);
+//        server.setDaemon(true);
         server.start();
 
         try {
@@ -25,13 +29,24 @@ public class Main {
             e.printStackTrace();
         }
 
-        Client client = new Client(port);
-        client.setDaemon(true);
+        Packet packet1 = null;
+        Packet packet2 = null;
+        try {
+            packet1  = new Packet((byte) 1, UnsignedLong.ONE, new Message(Message.cTypes.ADD_PRODUCT_GROUP,1,"client1"));
+            packet2  = new Packet((byte) 1, UnsignedLong.ONE, new Message(Message.cTypes.ADD_PRODUCT,1,"client2"));
+        } catch (BadPaddingException e) {
+            e.printStackTrace();
+        } catch (IllegalBlockSizeException e) {
+            e.printStackTrace();
+        }
 
-        Client client2 = new Client(port);
-        client2.setDaemon(true);
+        Client client1 = new Client(port, packet1);
+//        client.setDaemon(true);
 
-        client.start();
+        Client client2 = new Client(port, packet2);
+//        client2.setDaemon(true);
+
+        client1.start();
         client2.start();
 
 
@@ -44,7 +59,7 @@ public class Main {
         server.shutdown();
 
         try {
-            Thread.sleep(3000);
+            Thread.sleep(5000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
