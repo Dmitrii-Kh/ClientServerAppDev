@@ -26,6 +26,10 @@ public class Packet {
 
     public Byte getbSrc() { return bSrc; }
 
+    public void setbPktId(UnsignedLong bPktId) {
+        this.bPktId = bPktId;
+    }
+
     public UnsignedLong getbPktId() {  return bPktId; }
 
     public final static Integer packetPartFirstLengthWithoutwLen = B_MAGIC.BYTES + Byte.BYTES + Long.BYTES;
