@@ -1,69 +1,78 @@
-package lab03;
+package lab03.TCP;
 
-import com.google.common.primitives.UnsignedLong;
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import java.io.BufferedOutputStream;
+import lab03.CRC16;
+import lab03.Packet;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeoutException;
+
 
 public class Network {
 
-    private BufferedOutputStream outputStream;
-    private InputStream          inputStream;
-    private int          maxTimeout;
-    private TimeUnit     timeUnit;
+    private Socket       socket;
+    private InputStream  inputStream;
+    private OutputStream outputStream;
 
-    private ArrayList<Byte>     receivedBytes = new ArrayList<>(Packet.HEADER_LENGTH * 3);
-    private LinkedList<Integer> bMagicIndexes = new LinkedList<>();
+    private int maxTimeout;
 
-    private Object outputStreamLock = new Object();
-    private Object inputStreamLock  = new Object();
+    private Semaphore outputStreamLock = new Semaphore(1);
+    private Semaphore inputStreamLock  = new Semaphore(1);
 
-    public Network(InputStream inputStream, OutputStream outputStream, int maxTimeout, TimeUnit timeUnit) {
-        this.inputStream = inputStream;
-        this.outputStream = new BufferedOutputStream(outputStream);
+    public Network(Socket socket, int maxTimeout) throws IOException {
+        if(maxTimeout < 0){
+            throw new IllegalArgumentException("timeout can't be negative");
+        }
+        this.socket = socket;
+        inputStream = socket.getInputStream();
+        outputStream = socket.getOutputStream();
 
-        this.maxTimeout = Math.max(maxTimeout, 0);
-        this.timeUnit = timeUnit;
+        this.maxTimeout = maxTimeout;
     }
 
 
     /**
-     * @return {@code packetBytes} if packet received successfully
-     * @throws IOException
-     * @throws TimeoutException if no data received after {@code maxTimeout}
+     * @return {@code packetBytes} if packet received successfully or {@code null} if the maxTimeout expires
+     * @throws IOException      if some I/O error occurs.
      */
-    public byte[] receive() throws IOException, TimeoutException, BadPaddingException, IllegalBlockSizeException {
-        synchronized (inputStreamLock) {
+    public byte[] receive() throws IOException {
+        try {
+            inputStreamLock.acquire();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            ArrayList<Byte>     receivedBytes = new ArrayList<>(Packet.HEADER_LENGTH * 3);
+            LinkedList<Integer> bMagicIndexes = new LinkedList<>();
+
             int    wLen    = 0;
             byte[] oneByte = new byte[1];
 
-            byte[] packetBytes = null;
+            byte[] packetBytes;
 
             boolean newData = true;
 
             while (true) {
                 if (inputStream.available() == 0) {
                     if (!newData) {
-                        throw new TimeoutException();
+                        return null;
                     }
                     newData = false;
 
                     try {
-                        timeUnit.sleep(maxTimeout);
+                        Thread.sleep(maxTimeout);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                     continue;
                 }
-
 
                 inputStream.read(oneByte);
                 newData = true;
@@ -79,8 +88,8 @@ public class Network {
                             .put(receivedBytes.get(receivedBytes.size() - 1)).rewind().getShort();
 
                     packetBytes = toPrimitiveByteArr(receivedBytes.toArray(new Byte[0]));
-                    final short crc2Evaluated = CRC16.evaluateCrc(packetBytes, Packet.HEADER_LENGTH,
-                            receivedBytes.size() - 2);
+                    final short crc2Evaluated =
+                            CRC16.evaluateCrc(packetBytes, Packet.HEADER_LENGTH, receivedBytes.size() - 2);
 
                     if (wCrc16_2 == crc2Evaluated) {
                         receivedBytes.clear();
@@ -90,14 +99,14 @@ public class Network {
                     } else {
 //                        System.out.println("message reset");
                         wLen = 0;
-                        resetToFirstBMagic();
+                        receivedBytes = resetToFirstBMagic(receivedBytes, bMagicIndexes);
                     }
 
                     //check header
                 } else if (receivedBytes.size() >= Packet.HEADER_LENGTH) {
 
                     final short wCrc16_1 = ByteBuffer.allocate(2).put(receivedBytes.get(Packet.HEADER_LENGTH - 2))
-                                .put(receivedBytes.get(Packet.HEADER_LENGTH - 1)).rewind().getShort();
+                            .put(receivedBytes.get(Packet.HEADER_LENGTH - 1)).rewind().getShort();
 
                     final short crc1Evaluated =
                             CRC16.evaluateCrc(toPrimitiveByteArr(receivedBytes.toArray(new Byte[0])), 0, 14);
@@ -108,48 +117,63 @@ public class Network {
 
                     } else {
 //                      System.out.println("header reset");
-                        resetToFirstBMagic();
-                        Packet ansPac = new Packet((byte) 0, UnsignedLong.ONE, new Message(Message.cTypes.EXCEPTION_FROM_SERVER,0, "Corrupted header!"));
-//                        return ansPac.toPacket();
-                        send(ansPac.toPacket());
+                        receivedBytes = resetToFirstBMagic(receivedBytes, bMagicIndexes);
                     }
                 }
             }
+        } finally {
+            inputStreamLock.release();
         }
     }
+
 
     public void send(byte[] msg) throws IOException {
-        synchronized (outputStreamLock) {
-            outputStream.write(msg);
-            outputStream.flush();
+        try {
+            outputStreamLock.acquire();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        outputStream.write(msg);
+
+        outputStreamLock.release();
+    }
+
+    public void shutdown() {
+        try {
+            inputStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        try {
+            outputStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        try {
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
-    //todo check
-    private void resetToFirstBMagic() {
-//        System.out.println(receivedBytes.toString());
+
+    private ArrayList<Byte> resetToFirstBMagic(ArrayList<Byte> receivedBytes, LinkedList<Integer> bMagicIndexes) {
         //todo notify client???
-//        try {
-//            send("!!!bad packet".getBytes());
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
 
         //reset to first bMagic if exists
-
         if (!bMagicIndexes.isEmpty()) {
             int firstMagicByteIndex = bMagicIndexes.poll();
 
-            ArrayList<Byte> tmp = new ArrayList<>(receivedBytes.size());
+            ArrayList<Byte> res = new ArrayList<>(receivedBytes.size());
 
             for (int i = firstMagicByteIndex; i < receivedBytes.size(); ++i) {
-                tmp.add(receivedBytes.get(i));
+                res.add(receivedBytes.get(i));
             }
-
-            receivedBytes = tmp;
+            return res;
 
         } else {
             receivedBytes.clear();
+            return receivedBytes;
         }
     }
 
