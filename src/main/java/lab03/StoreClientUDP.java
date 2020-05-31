@@ -15,12 +15,14 @@ public class StoreClientUDP extends Thread {
     private Packet packet;
     private byte[] packetBytes;
 
+
     public StoreClientUDP(int port, Packet packet) throws UnknownHostException {
         this.port = port;
         this.packet = packet;
 
         try {
             ds = new DatagramSocket();
+            ds.setSoTimeout(1000);
         } catch (SocketException e) {
             e.printStackTrace();
         }
@@ -31,35 +33,62 @@ public class StoreClientUDP extends Thread {
     @Override
     public void run() {
 
+        sendAndReceive(packet);
+
+//        try {
+//            this.sleep(6000);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
+
+        packet.setbPktId(packet.getbPktId().minus(UnsignedLong.ONE));
+
+        sendAndReceive(packet);
+
+
+    }
+
+    private void sendAndReceive(Packet packet) {
+
+        if(ds.isClosed()) {
+            try {
+                ds = new DatagramSocket();
+                ds.setSoTimeout(1000);
+            } catch (SocketException e) {
+                e.printStackTrace();
+            }
+        }
+
+
         packetBytes = packet.toPacket();
         dp = new DatagramPacket(packetBytes, packetBytes.length, ip, port);
+        boolean received = false;
 
         try {
             ds.send(dp);
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        packet.setbPktId(packet.getbPktId().plus(UnsignedLong.ONE));
-        packetBytes = packet.toPacket();
-        dp = new DatagramPacket(packetBytes, packetBytes.length, ip, port);
-
-        try {
-            ds.send(dp);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
 
         while (true) {
 
             byte[] buff = new byte[1024];
             DatagramPacket incomingDatagramPacket = new DatagramPacket(buff, buff.length);
+
             try {
                 ds.receive(incomingDatagramPacket);
             } catch (IOException e) {
-                e.printStackTrace();
+                if (received) {
+                    System.out.println("Client Socket timed out!");
+                    ds.close();
+                    break;
+                } else {
+                    ds.close();
+                    sendAndReceive(packet);
+                    break;
+                }
             }
+
             Packet answerPacket = null;
             try {
                 answerPacket = new Packet(incomingDatagramPacket.getData());
@@ -69,8 +98,40 @@ public class StoreClientUDP extends Thread {
                 e.printStackTrace();
             }
 
+            if (answerPacket.getbPktId().compareTo(packet.getbPktId()) == 0) received = true;
             System.out.println("Message from server : " + answerPacket.getBMsq().getMessage() + " ; Packet id : " + answerPacket.getbPktId());
         }
-
     }
+
+
+    private void receiveFromServer() {
+        while (true) {
+
+            byte[] buff = new byte[1024];
+            DatagramPacket incomingDatagramPacket = new DatagramPacket(buff, buff.length);
+
+            try {
+                ds.receive(incomingDatagramPacket);
+            } catch (IOException e) {
+                System.out.println("Client Socket timed out!");
+                //System.out.println(packetIds);
+                ds.close();
+                break;
+            }
+
+            Packet answerPacket = null;
+            try {
+                answerPacket = new Packet(incomingDatagramPacket.getData());
+            } catch (BadPaddingException e) {
+                e.printStackTrace();
+            } catch (IllegalBlockSizeException e) {
+                e.printStackTrace();
+            }
+
+
+            System.out.println("Message from server : " + answerPacket.getBMsq().getMessage() + " ; Packet id : " + answerPacket.getbPktId());
+
+        }
+    }
+
 }

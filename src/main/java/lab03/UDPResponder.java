@@ -35,28 +35,59 @@ public class UDPResponder implements Runnable {
                 e.printStackTrace();
             }
 
-            try {
-                //  System.out.println("In process");
-                answerPac = Processor.process(pacToBeProcessed);
-            } catch (BadPaddingException e) {
-                e.printStackTrace();
-            } catch (IllegalBlockSizeException e) {
-                e.printStackTrace();
-            }
+            if(StoreServerUDP.packetCanBeProcessed(pacToBeProcessed.getBMsq().getBUserId(), pacToBeProcessed.getbPktId())) {
+                try {
+                    //  System.out.println("In process");
+                    answerPac = Processor.process(pacToBeProcessed);
+                } catch (BadPaddingException e) {
+                    e.printStackTrace();
+                } catch (IllegalBlockSizeException e) {
+                    e.printStackTrace();
+                }
 
-            try {
-                ds = new DatagramSocket();
-            } catch (SocketException e) {
-                e.printStackTrace();
-            }
+                try {
+                    ds = new DatagramSocket();
+                } catch (SocketException e) {
+                    e.printStackTrace();
+                }
 
-            try {
-                ds.send(new DatagramPacket(answerPac.toPacket(), answerPac.toPacket().length, dp.getAddress(), dp.getPort()));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+                try {
+                    ds.send(new DatagramPacket(answerPac.toPacket(), answerPac.toPacket().length, dp.getAddress(), dp.getPort()));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                ds.close();
 
-        }
-    }
+
+            } else {
+
+
+                try {
+                    answerPac = new Packet(pacToBeProcessed.getbSrc(), pacToBeProcessed.getbPktId(),
+                            new Message(Message.cTypes.EXCEPTION_FROM_SERVER, 0, "This packet has been processed yet!"));
+                } catch (BadPaddingException e) {
+                    e.printStackTrace();
+                } catch (IllegalBlockSizeException e) {
+                    e.printStackTrace();
+                }
+
+                try {
+                    ds = new DatagramSocket();
+                } catch (SocketException e) {
+                    e.printStackTrace();
+                }
+
+                try {
+                    ds.send(new DatagramPacket(answerPac.toPacket(), answerPac.toPacket().length, dp.getAddress(), dp.getPort()));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                ds.close();
+
+            } //else
+
+        } //lock
+
+    } //run
 
 }
