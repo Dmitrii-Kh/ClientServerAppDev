@@ -4,40 +4,49 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 
-public class StoreServerUDP {
+
+public class StoreServerUDP extends Thread {
     private DatagramSocket datagramSocket = null;
-    private DatagramPacket datagramPacket = null;
-    private byte[] buffer = null;
-    //private ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(10);
+    private int listenPort;
+    Boolean isRunning = true;
+
+    private ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(10);
+
 
     StoreServerUDP(int listenPort) {
+        this.listenPort = listenPort;
         try {
             datagramSocket = new DatagramSocket(listenPort);
         } catch (SocketException e) {
             e.printStackTrace();
         }
 
-        buffer = new byte[1024];
-        datagramPacket = new DatagramPacket(buffer, buffer.length);
-
-//        try {
-//            run();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
+        this.start();
     }
 
-    public void run() throws IOException {
-        System.out.println("Server running on port: " + datagramSocket.getPort());
+    @Override
+    public void run() {
+        System.out.println("Server running on port: " + listenPort);
 
-        while (true) /* <-- todo change it ?*/ {
+        while (isRunning) {
 
-            //datagramSocket.receive(datagramPacket); <-- todo inside ClientHandler run() ?
-            //todo --> handle DatagramPacket, e.g. executor.execute(new ClientHandler(datagramSocket, datagramPacket));
-            buffer = new byte[1024]; //clear the buffer after every message
+            byte[] buffer = new byte[1024];
+            DatagramPacket datagramPacket = new DatagramPacket(buffer, buffer.length);
 
+            try {
+                datagramSocket.receive(datagramPacket);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            executor.execute(new UDPResponder(datagramPacket));
+
+            //todo executor.shutdown();
         }
+
     }
 
 }
