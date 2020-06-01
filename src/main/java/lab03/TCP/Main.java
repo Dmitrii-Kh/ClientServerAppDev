@@ -8,7 +8,6 @@ import lab03.Packet;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import java.io.IOException;
-import java.net.ServerSocket;
 
 
 public class Main {
@@ -17,7 +16,6 @@ public class Main {
         System.out.println("main start\n");
 
         int port = 54321;
-//        ServerSocket socket = new ServerSocket(port);
 
         StoreServerTCP server = null;
         try {
@@ -25,9 +23,7 @@ public class Main {
         } catch (IOException e) {
             e.printStackTrace();
         }
-//        server.setDaemon(true);
         server.start();
-//        server.shutdown();
 
         try {
             Thread.sleep(100);
@@ -49,10 +45,8 @@ public class Main {
         }
 
         StoreClientTCP client1 = new StoreClientTCP(port, packet1);
-//        client.setDaemon(true);
 
         StoreClientTCP client2 = new StoreClientTCP(port, packet2);
-//        client2.setDaemon(true);
 
         client1.start();
         client2.start();
@@ -65,12 +59,7 @@ public class Main {
         }
 
         server.shutdown();
-//
-//        try {
-//            Thread.sleep(5000);
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
+
 
         System.out.println("\nmain end");
     }

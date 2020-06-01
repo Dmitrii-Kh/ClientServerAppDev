@@ -9,9 +9,7 @@ import javax.crypto.IllegalBlockSizeException;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.Socket;
-import java.net.SocketTimeoutException;
-import java.util.IllegalFormatException;
-import java.util.concurrent.TimeoutException;
+
 
 
 public class StoreClientTCP extends Thread {
@@ -106,11 +104,6 @@ public class StoreClientTCP extends Thread {
             System.out.println(Thread.currentThread().getName() + " end");
         }
     }
-
-//    private void reconnect(){
-//        network.shutdown();
-//        connect();
-//    }
 
     public void shutdown() {
         //todo

@@ -9,7 +9,6 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import java.io.IOException;
 import java.net.Socket;
-import java.net.SocketTimeoutException;
 import java.util.Arrays;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -33,7 +32,7 @@ public class ClientHandler implements Runnable {
         try {
             Packet helloPacket = null;
             try {
-                helloPacket = new Packet((byte)0, UnsignedLong.fromLongBits(0),
+                helloPacket = new Packet((byte) 0, UnsignedLong.fromLongBits(0),
                         new Message(Message.cTypes.OK, 0, "connection established"));
             } catch (BadPaddingException e) {
                 e.printStackTrace();
@@ -52,11 +51,7 @@ public class ClientHandler implements Runnable {
             }
 
         } catch (IOException e) {
-            if (e.getMessage().equals("Stream closed.")) {
-                //todo notify client?
-            } else {
-                e.printStackTrace();
-            }
+            e.printStackTrace();
         } finally {
             shutdown();
         }

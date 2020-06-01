@@ -97,7 +97,6 @@ public class Network {
                         return packetBytes;
 
                     } else {
-//                        System.out.println("message reset");
                         wLen = 0;
                         receivedBytes = resetToFirstBMagic(receivedBytes, bMagicIndexes);
                     }
@@ -116,7 +115,6 @@ public class Network {
                                 .put(receivedBytes.get(12)).put(receivedBytes.get(13)).rewind().getInt();
 
                     } else {
-//                      System.out.println("header reset");
                         receivedBytes = resetToFirstBMagic(receivedBytes, bMagicIndexes);
                     }
                 }
