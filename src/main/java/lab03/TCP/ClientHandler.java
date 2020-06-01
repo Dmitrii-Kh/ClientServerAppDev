@@ -1,5 +1,7 @@
 package lab03.TCP;
 
+import com.google.common.primitives.UnsignedLong;
+import lab03.Message;
 import lab03.Packet;
 import lab03.Processor;
 
@@ -29,6 +31,16 @@ public class ClientHandler implements Runnable {
     public void run() {
         Thread.currentThread().setName(Thread.currentThread().getName() + " - ClientHandler");
         try {
+            Packet helloPacket = null;
+            try {
+                helloPacket = new Packet((byte)0, UnsignedLong.fromLongBits(0),
+                        new Message(Message.cTypes.OK, 0, "connection established"));
+            } catch (BadPaddingException e) {
+                e.printStackTrace();
+            } catch (IllegalBlockSizeException e) {
+                e.printStackTrace();
+            }
+            network.send(helloPacket.toPacket());
 
             while (true) {
                 byte[] packetBytes = network.receive();

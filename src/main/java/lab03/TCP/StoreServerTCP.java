@@ -43,6 +43,11 @@ public class StoreServerTCP extends Thread {
 
             while (true) {
                 connectionPool.execute(new ClientHandler(server.accept(), processPool, clientTimeout));
+//                try {
+//                    Thread.sleep(1000);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
             }
 
         } catch (SocketException e) {

@@ -11,7 +11,6 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeoutException;
 
 
 public class Network {
@@ -25,9 +24,10 @@ public class Network {
     private Semaphore outputStreamLock = new Semaphore(1);
     private Semaphore inputStreamLock  = new Semaphore(1);
 
+
     public Network(Socket socket, int maxTimeout) throws IOException {
-        if(maxTimeout < 0){
-            throw new IllegalArgumentException("timeout can't be negative");
+        if(maxTimeout < 100){
+            throw new IllegalArgumentException("timeout can't be < 100");
         }
         this.socket = socket;
         inputStream = socket.getInputStream();
@@ -57,17 +57,17 @@ public class Network {
 
             byte[] packetBytes;
 
-            boolean newData = true;
+            int noNewData = 0;
 
             while (true) {
                 if (inputStream.available() == 0) {
-                    if (!newData) {
+                    if (noNewData == maxTimeout/100) {
                         return null;
                     }
-                    newData = false;
+                    ++noNewData;
 
                     try {
-                        Thread.sleep(maxTimeout);
+                        Thread.sleep(100);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -75,7 +75,7 @@ public class Network {
                 }
 
                 inputStream.read(oneByte);
-                newData = true;
+                noNewData = 0;
 
                 if (Packet.B_MAGIC.equals(oneByte[0]) && receivedBytes.size() > 0) {
                     bMagicIndexes.add(receivedBytes.size());

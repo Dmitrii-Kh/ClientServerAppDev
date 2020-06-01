@@ -3,18 +3,12 @@ package lab03.TCP;
 import com.google.common.primitives.UnsignedLong;
 import lab03.Message;
 import lab03.Packet;
-import lab03.TCP.StoreClientTCP;
-import lab03.TCP.StoreServerTCP;
+
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.net.ServerSocket;
-import java.net.Socket;
 
 
 public class Main {
@@ -23,16 +17,17 @@ public class Main {
         System.out.println("main start\n");
 
         int port = 54321;
-
+//        ServerSocket socket = new ServerSocket(port);
 
         StoreServerTCP server = null;
         try {
-            server = new StoreServerTCP(port, 40, 10, 3000);
+            server = new StoreServerTCP(port, 40, 10, 5000);
         } catch (IOException e) {
             e.printStackTrace();
         }
 //        server.setDaemon(true);
         server.start();
+//        server.shutdown();
 
         try {
             Thread.sleep(100);
@@ -41,6 +36,7 @@ public class Main {
         }
 
         Packet packet1 = null;
+
         Packet packet2 = null;
         try {
             packet1 =
@@ -63,18 +59,18 @@ public class Main {
 
 
         try {
-            Thread.sleep(5000);
+            Thread.sleep(3_000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
         server.shutdown();
-
-        try {
-            Thread.sleep(5000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+//
+//        try {
+//            Thread.sleep(5000);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
 
         System.out.println("\nmain end");
     }
