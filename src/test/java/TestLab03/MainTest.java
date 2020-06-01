@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
-
 import java.net.UnknownHostException;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -80,7 +79,7 @@ public class MainTest {
 
         StoreClientUDP sc0 = new StoreClientUDP(port, pac0);
         Thread.sleep(100);  //in final project client will be waiting for answer from server,
-                                  //and only after receiving answer packet client will send next packet
+        //and only after receiving answer packet client will send next packet
 
         StoreClientUDP sc1 = new StoreClientUDP(port, pac1);
 
@@ -157,6 +156,8 @@ public class MainTest {
         StoreServerUDP ss = new StoreServerUDP(port);
 
         StoreClientUDP sc0 = new StoreClientUDP(port, pac0);
+        Thread.sleep(100);                 //in final project client will be waiting for answer from server,
+                                                //and only after receiving answer packet client will send next packet
         StoreClientUDP sc1 = new StoreClientUDP(port, pac0);
 
         assertEquals("This packet has been processed yet!", sc1.getAnswerPacket().getBMsq().getMessage());
