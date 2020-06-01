@@ -1,7 +1,6 @@
-package lab03;
+package lab03.UDP;
 
 import com.google.common.primitives.UnsignedLong;
-
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -21,7 +20,7 @@ public class StoreServerUDP extends Thread {
     static ConcurrentHashMap<Integer, UnsignedLong> now = new ConcurrentHashMap<>();
 
 
-    StoreServerUDP(int listenPort) {
+    public StoreServerUDP(int listenPort) {
         this.listenPort = listenPort;
         try {
             datagramSocket = new DatagramSocket(listenPort);
@@ -29,7 +28,7 @@ public class StoreServerUDP extends Thread {
             e.printStackTrace();
         }
         try {
-            datagramSocket.setSoTimeout(10000);
+            datagramSocket.setSoTimeout(7000);
         } catch (SocketException e) {
             e.printStackTrace();
         }
@@ -54,6 +53,7 @@ public class StoreServerUDP extends Thread {
                 executor.shutdown();
                 datagramSocket.close();
                 cmap.isActive = false;
+                System.out.println("Waiting for ClientMapCleaner to shutdown..");
                 break;
             }
 

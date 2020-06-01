@@ -1,6 +1,8 @@
-package lab03;
+package lab03.UDP;
 
 import com.google.common.primitives.UnsignedLong;
+import lab03.Message;
+import lab03.Packet;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -14,16 +16,17 @@ public class MainUDPTest {
 
         int port = 5432;
 
-        Packet pac = null;
+        Packet pac0 = null;
         Packet pac1 = null;
         Packet pac2 = null;
+
         try {
-            pac = new Packet((byte) 1, UnsignedLong.ONE,
-                    new Message(Message.cTypes.ADD_PRODUCT_GROUP, 0, "test"));
+            pac0 = new Packet((byte) 1, UnsignedLong.ONE,
+                    new Message(Message.cTypes.ADD_PRODUCT_GROUP, 0, "test client 0"));
             pac1 = new Packet((byte) 1, UnsignedLong.ONE,
-                    new Message(Message.cTypes.ADD_PRODUCT, 1, "test1"));
+                    new Message(Message.cTypes.ADD_PRODUCT, 1, "test client 1"));
             pac2 = new Packet((byte) 1, UnsignedLong.ONE,
-                    new Message(Message.cTypes.GET_PRODUCT_AMOUNT, 2, "test2"));
+                    new Message(Message.cTypes.GET_PRODUCT_AMOUNT, 2, "test client 2"));
         } catch (BadPaddingException e) {
             e.printStackTrace();
         } catch (IllegalBlockSizeException e) {
@@ -32,14 +35,13 @@ public class MainUDPTest {
 
         StoreServerUDP ss = new StoreServerUDP(port);
 
-        StoreClientUDP sc = new StoreClientUDP(port, pac);
+        StoreClientUDP sc0 = new StoreClientUDP(port, pac0);
         StoreClientUDP sc1 = new StoreClientUDP(port, pac1);
         StoreClientUDP sc2 = new StoreClientUDP(port, pac2);
 
 
         ss.join();
 
-        // Thread.sleep(2000);
 
         System.out.println("\nmain end");
     }

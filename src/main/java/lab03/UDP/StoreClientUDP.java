@@ -1,6 +1,6 @@
-package lab03;
+package lab03.UDP;
 
-import com.google.common.primitives.UnsignedLong;
+import lab03.Packet;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -13,6 +13,7 @@ public class StoreClientUDP extends Thread {
     InetAddress ip = InetAddress.getLocalHost();
     private int port;
     private Packet packet;
+    private Packet answerPacket;
     private byte[] packetBytes;
 
 
@@ -22,7 +23,7 @@ public class StoreClientUDP extends Thread {
 
         try {
             ds = new DatagramSocket();
-            ds.setSoTimeout(1000);
+            ds.setSoTimeout(1500);
         } catch (SocketException e) {
             e.printStackTrace();
         }
@@ -35,25 +36,14 @@ public class StoreClientUDP extends Thread {
 
         sendAndReceive(packet);
 
-//        try {
-//            this.sleep(6000);
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
-
-        packet.setbPktId(packet.getbPktId().minus(UnsignedLong.ONE));
-
-        sendAndReceive(packet);
-
-
     }
 
     private void sendAndReceive(Packet packet) {
 
-        if(ds.isClosed()) {
+        if (ds.isClosed()) {
             try {
                 ds = new DatagramSocket();
-                ds.setSoTimeout(1000);
+                ds.setSoTimeout(1500);
             } catch (SocketException e) {
                 e.printStackTrace();
             }
@@ -78,12 +68,13 @@ public class StoreClientUDP extends Thread {
             try {
                 ds.receive(incomingDatagramPacket);
             } catch (IOException e) {
-                if (received) {
+                if (received) {             //if correct packet received from server
                     System.out.println("Client Socket timed out!");
                     ds.close();
                     break;
                 } else {
                     ds.close();
+                    System.out.println("resending packet (id : " + packet.getbPktId() + ") ..");
                     sendAndReceive(packet);
                     break;
                 }
@@ -92,6 +83,7 @@ public class StoreClientUDP extends Thread {
             Packet answerPacket = null;
             try {
                 answerPacket = new Packet(incomingDatagramPacket.getData());
+                this.answerPacket = answerPacket; //this field was made to assert incoming message from server
             } catch (BadPaddingException e) {
                 e.printStackTrace();
             } catch (IllegalBlockSizeException e) {
@@ -103,35 +95,14 @@ public class StoreClientUDP extends Thread {
         }
     }
 
-
-    private void receiveFromServer() {
+    public Packet getAnswerPacket() throws InterruptedException {
         while (true) {
-
-            byte[] buff = new byte[1024];
-            DatagramPacket incomingDatagramPacket = new DatagramPacket(buff, buff.length);
-
-            try {
-                ds.receive(incomingDatagramPacket);
-            } catch (IOException e) {
-                System.out.println("Client Socket timed out!");
-                //System.out.println(packetIds);
-                ds.close();
+            if (answerPacket != null) {
                 break;
             }
-
-            Packet answerPacket = null;
-            try {
-                answerPacket = new Packet(incomingDatagramPacket.getData());
-            } catch (BadPaddingException e) {
-                e.printStackTrace();
-            } catch (IllegalBlockSizeException e) {
-                e.printStackTrace();
-            }
-
-
-            System.out.println("Message from server : " + answerPacket.getBMsq().getMessage() + " ; Packet id : " + answerPacket.getbPktId());
-
+            this.sleep(1);
         }
+        return answerPacket;
     }
 
 }

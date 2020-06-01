@@ -1,4 +1,4 @@
-package lab03;
+package lab03.UDP;
 
 public class ClientMapCleaner extends Thread {
 

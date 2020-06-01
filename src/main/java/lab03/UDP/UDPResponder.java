@@ -1,5 +1,8 @@
-package lab03;
+package lab03.UDP;
 
+import lab03.Message;
+import lab03.Packet;
+import lab03.Processor;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import java.io.IOException;
@@ -12,7 +15,6 @@ public class UDPResponder implements Runnable {
     private Packet answerPac = null;
     private DatagramSocket ds;
     private DatagramPacket dp;
-
     private Object lock = new Object();
 
     UDPResponder(DatagramPacket dp) {
@@ -84,10 +86,10 @@ public class UDPResponder implements Runnable {
                 }
                 ds.close();
 
-            } //else
+            }
 
-        } //lock
+        }
 
-    } //run
+    }
 
 }
