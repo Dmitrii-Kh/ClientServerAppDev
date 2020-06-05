@@ -26,5 +26,15 @@ public class MainLab04 {
         //filter.setToPrice(900.0);
         dp.getProductList(0, 20, filter).forEach(System.out::println);
 
+
+        System.out.println("\n==========");
+        dp.update("title", "_MEGA_PRODUCT_", "title","product20");
+        dp.update("price", "1000000000", "title","_MEGA_PRODUCT_");
+        System.out.println("after update\n");
+
+        dp.getProductList(0, 20, new Criteria()).forEach(System.out::println);
+
+        dp.deleteAll();
+
     }
 }

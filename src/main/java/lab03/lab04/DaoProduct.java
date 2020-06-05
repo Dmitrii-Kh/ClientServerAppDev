@@ -117,4 +117,22 @@ public class DaoProduct {
         }
     }
 
+    public void update(String updateColumnName, String newValue, String searchColumnName, String searchValue){
+        try (final Statement statement = connection.createStatement()) {
+            statement.executeUpdate("update 'products' set " + updateColumnName + " = '" + newValue +
+                    "' where " + searchColumnName + " = '" + searchValue + "'");
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to update table!", e);
+        }
+    }
+
+    public void deleteAll(){
+        try (final Statement statement = connection.createStatement()) {
+            statement.executeUpdate("delete from 'products'");
+            statement.executeUpdate("delete from sqlite_sequence where name='products';");
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to delete all!", e);
+        }
+    }
+
 }
