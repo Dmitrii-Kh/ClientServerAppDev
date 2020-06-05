@@ -28,16 +28,17 @@ public class DaoProduct {
 
     public void initTable() {
         try (Statement statement = connection.createStatement()) {
-            statement.execute("create table if not exists 'products' ('id' INTEGER PRIMARY KEY AUTOINCREMENT, 'title' VARCHAR(250), 'price' DECIMAL(10, 3))");
+            statement.execute("create table if not exists 'products' ('id' INTEGER PRIMARY KEY AUTOINCREMENT, 'title' VARCHAR(250), 'price' DECIMAL(10, 3), 'quantity' INTEGER)");
         } catch (SQLException e) {
             throw new RuntimeException("Failed to create a table!", e);
         }
     }
 
     public int insertProduct(final Product product) {
-        try (PreparedStatement insertStatement = connection.prepareStatement("insert into 'products'('title', 'price') values (?, ?)")) {
+        try (PreparedStatement insertStatement = connection.prepareStatement("insert into 'products'('title', 'price', 'quantity') values (?, ?, ?)")) {
             insertStatement.setString(1, product.getTitle());
             insertStatement.setDouble(2, product.getPrice());
+            insertStatement.setInt(3, product.getQuantity());
             insertStatement.execute();
 
             final ResultSet result = insertStatement.getGeneratedKeys();
@@ -65,7 +66,8 @@ public class DaoProduct {
             final String query = Stream.of(
                     like("title", criteria.getQuery()),
                     in("id", criteria.getIds()),
-                    range("price", criteria.getFromPrice(), criteria.getToPrice())
+                    range("price", criteria.getFromPrice(), criteria.getToPrice()),
+                    range("quantity", criteria.getFromQuantity(), criteria.getToQuantity())
             )
                     .filter(Objects::nonNull)
                     .collect(Collectors.joining(" AND "));
@@ -80,7 +82,7 @@ public class DaoProduct {
             while (resultSet.next()) {
                 products.add(new Product(resultSet.getInt("id"),
                         resultSet.getString("title"),
-                        resultSet.getDouble("price")));
+                        resultSet.getInt("price"), resultSet.getInt("quantity")));
             }
             return products;
         } catch (SQLException e) {
@@ -108,6 +110,19 @@ public class DaoProduct {
 
         return fieldName + " BETWEEN " + from + " AND " + to;
     }
+
+    private static String range(final String fieldName, final Integer from, final Integer to) {
+        if (from == null && to == null) return null;
+
+        if (from != null && to == null)
+            return fieldName + " > " + from;
+
+        if (from == null && to != null)
+            return fieldName + " < " + to;
+
+        return fieldName + " BETWEEN " + from + " AND " + to;
+    }
+
 
     public void deleteByTitle(final String title) {
         try (final Statement statement = connection.createStatement()) {

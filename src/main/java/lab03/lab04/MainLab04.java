@@ -9,7 +9,7 @@ public class MainLab04 {
         DaoProduct dp = new DaoProduct("file.db");
 
         for (int i = 1; i < 21; i++) {
-            dp.insertProduct(new Product("product" + i, Math.random() * 1000));
+            dp.insertProduct(new Product("product" + i, Math.random() * 1000, i*i));
         }
 
 
@@ -20,10 +20,12 @@ public class MainLab04 {
         System.out.println("==========");
 
         final Criteria filter = new Criteria();
-        filter.setIds(new HashSet<>(Arrays.asList(1,2,3,4,10)));
-        filter.setQuery("product1");
-        filter.setFromPrice(600.0);
+        //filter.setIds(new HashSet<>(Arrays.asList(1,2,3,4,10)));
+//        filter.setQuery("product1");
+//        filter.setFromPrice(600.0);
         //filter.setToPrice(900.0);
+        //filter.setFromQuantity(10);
+        filter.setToQuantity(26);
         dp.getProductList(0, 20, filter).forEach(System.out::println);
 
 

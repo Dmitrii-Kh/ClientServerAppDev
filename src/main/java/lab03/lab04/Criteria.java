@@ -8,7 +8,8 @@ public class Criteria {
     private String query;
     private Double fromPrice;
     private Double toPrice;
-
+    private Integer fromQuantity;
+    private Integer toQuantity;
 
 
     public Set<Integer> getIds() {
@@ -43,5 +44,20 @@ public class Criteria {
         this.toPrice = toPrice;
     }
 
+    public Integer getFromQuantity() {
+        return fromQuantity;
+    }
+
+    public void setFromQuantity(Integer fromQuantity) {
+        this.fromQuantity = fromQuantity;
+    }
+
+    public Integer getToQuantity() {
+        return toQuantity;
+    }
+
+    public void setToQuantity(Integer toQuantity) {
+        this.toQuantity = toQuantity;
+    }
 
 }
