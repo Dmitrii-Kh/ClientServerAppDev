@@ -1,6 +1,7 @@
 package lab04.database;
 
 import lab04.ProductFilter;
+import lab04.entities.Category;
 import lab04.entities.Product;
 
 import java.sql.*;
@@ -13,15 +14,20 @@ public class DaoProduct {
     private final Connection connection;
 
     public DaoProduct(final Connection connection) {
-       this.connection = connection;
+        this.connection = connection;
     }
 
 
     public int insertProduct(final Product product) {
-        try (PreparedStatement insertStatement = connection.prepareStatement("insert into 'products'('title', 'price', 'quantity') values (?, ?, ?)")) {
+        try (PreparedStatement insertStatement = connection.prepareStatement(
+                "insert into 'products'('title', 'description', 'producer', 'price', 'quantity', 'category') " +
+                        "values (?, ?, ?, ?, ?, ?)")) {
             insertStatement.setString(1, product.getTitle());
-            insertStatement.setDouble(2, product.getPrice());
-            insertStatement.setInt(3, product.getQuantity());
+            insertStatement.setString(2, product.getDescription());
+            insertStatement.setString(3, product.getProducer());
+            insertStatement.setDouble(4, product.getPrice());
+            insertStatement.setInt(5, product.getQuantity());
+            insertStatement.setString(6, product.getCategory());
             insertStatement.execute();
 
             final ResultSet result = insertStatement.getGeneratedKeys();
@@ -34,8 +40,8 @@ public class DaoProduct {
     public boolean productTitleAlreadyExists(final String productTitle) {
         try (final Statement statement = connection.createStatement()) {
             final ResultSet result = statement.executeQuery(
-                    String.format("select count(*) as num_of_products from 'products' where title = '%s'", productTitle)
-            );
+                    String.format("select count(*) as num_of_products from 'products' where title = '%s'",
+                            productTitle));
             result.next();
             return result.getInt("num_of_products") == 0;
         } catch (SQLException e) {
@@ -43,30 +49,51 @@ public class DaoProduct {
         }
     }
 
-    public Product getProduct(int id){
+
+    public Product getProduct(int id) {
         ProductFilter productFilter = new ProductFilter();
         productFilter.setIds(Set.of(id));
-        return getProductList(0, 1, productFilter).get(0);
+        List<Product> list = getProductList(0, 1, productFilter);
+        return list.isEmpty() ? null : list.get(0);
     }
 
-    public List<Product> getProductList(final int page, final int size, ProductFilter productFilter) {
+    public Product getProduct(String title) {
+        try (final Statement statement = connection.createStatement()) {
+
+            final String    query     = "SELECT * FROM 'products' WHERE title = '" + title + "'";
+            final ResultSet resultSet = statement.executeQuery(query);
+
+            return resultSet.next() ?
+                    new Product(
+                            resultSet.getInt("id"),
+                            resultSet.getString("title"),
+                            resultSet.getString("description"),
+                            resultSet.getString("producer"),
+                            resultSet.getDouble("price"),
+                            resultSet.getInt("quantity"),
+                            resultSet.getString("category"))
+                    : null;
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to get product!", e);
+        }
+    }
+
+    public List<Product> getProductList(final int page, final int size, final ProductFilter productFilter) {
         try (final Statement statement = connection.createStatement()) {
 
             final String where = createWhereClause(productFilter);
 
-            final String finalSqlQuery = String.format("select * from 'products' %s limit %s offset %s", where, size, page * size);
+            final String finalSqlQuery =
+                    String.format("select * from 'products' %s limit %s offset %s", where, size, page * size);
             System.out.println(finalSqlQuery);
             final ResultSet resultSet = statement.executeQuery(finalSqlQuery);
 
 
             final List<Product> products = new ArrayList<>();
             while (resultSet.next()) {
-                products.add(new Product(resultSet.getInt("id"),
-                        resultSet.getString("title"),
-                        resultSet.getString("description"),
-                        resultSet.getString("producer"),
-                        resultSet.getInt("price"),
-                        resultSet.getInt("quantity")));
+                products.add(new Product(resultSet.getInt("id"), resultSet.getString("title"),
+                        resultSet.getString("description"), resultSet.getString("producer"), resultSet.getInt("price"),
+                        resultSet.getInt("quantity"), resultSet.getString("category")));
             }
             return products;
         } catch (SQLException e) {
@@ -74,15 +101,11 @@ public class DaoProduct {
         }
     }
 
-    private static String createWhereClause(ProductFilter productFilter){
-        final String query = Stream.of(
-                like("title", productFilter.getQuery()),
-                in("id", productFilter.getIds()),
+    private static String createWhereClause(ProductFilter productFilter) {
+        final String query = Stream.of(like("title", productFilter.getQuery()), in("id", productFilter.getIds()),
                 range("price", productFilter.getFromPrice(), productFilter.getToPrice()),
-                range("quantity", productFilter.getFromQuantity(), productFilter.getToQuantity())
-        )
-                .filter(Objects::nonNull)
-                .collect(Collectors.joining(" AND "));
+                range("quantity", productFilter.getFromQuantity(), productFilter.getToQuantity()))
+                .filter(Objects::nonNull).collect(Collectors.joining(" AND "));
 
         final String where = query.isEmpty() ? "" : "where " + query;
         return where;
@@ -100,11 +123,9 @@ public class DaoProduct {
     private static String range(final String fieldName, final Double from, final Double to) {
         if (from == null && to == null) return null;
 
-        if (from != null && to == null)
-            return fieldName + " > " + from;
+        if (from != null && to == null) return fieldName + " > " + from;
 
-        if (from == null && to != null)
-            return fieldName + " < " + to;
+        if (from == null && to != null) return fieldName + " < " + to;
 
         return fieldName + " BETWEEN " + from + " AND " + to;
     }
@@ -112,17 +133,26 @@ public class DaoProduct {
     private static String range(final String fieldName, final Integer from, final Integer to) {
         if (from == null && to == null) return null;
 
-        if (from != null && to == null)
-            return fieldName + " > " + from;
+        if (from != null && to == null) return fieldName + " > " + from;
 
-        if (from == null && to != null)
-            return fieldName + " < " + to;
+        if (from == null && to != null) return fieldName + " < " + to;
 
         return fieldName + " BETWEEN " + from + " AND " + to;
     }
 
 
-    public void deleteByTitle(final String title) {
+    public void update(String updateColumnName, String newValue, String searchColumnName, String searchValue) {
+        try (final Statement statement = connection.createStatement()) {
+            statement.executeUpdate(
+                    "update 'products' set " + updateColumnName + " = '" + newValue + "' where " + searchColumnName +
+                            " = '" + searchValue + "'");
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to update table!", e);
+        }
+    }
+
+
+    public void delete(final String title) {
         try (final Statement statement = connection.createStatement()) {
             statement.executeUpdate(String.format("delete from 'products' where title = '%s'", title));
         } catch (SQLException e) {
@@ -130,19 +160,10 @@ public class DaoProduct {
         }
     }
 
-    public void update(String updateColumnName, String newValue, String searchColumnName, String searchValue){
-        try (final Statement statement = connection.createStatement()) {
-            statement.executeUpdate("update 'products' set " + updateColumnName + " = '" + newValue +
-                    "' where " + searchColumnName + " = '" + searchValue + "'");
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to update table!", e);
-        }
-    }
-
-    public void deleteAll(){
+    public void deleteAll() {
         try (final Statement statement = connection.createStatement()) {
             statement.executeUpdate("delete from 'products'");
-            statement.executeUpdate("delete from sqlite_sequence where name='products';");
+            statement.executeUpdate("delete from sqlite_sequence where name='products'");
         } catch (SQLException e) {
             throw new RuntimeException("Failed to delete all!", e);
         }

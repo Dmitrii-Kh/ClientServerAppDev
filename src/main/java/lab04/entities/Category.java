@@ -1,28 +1,20 @@
 package lab04.entities;
 
-public class ProductGroup {
+public class Category {
 
-    private final Integer id;
     private String title;
     private String description;
 
-    ProductGroup(final Integer id, final String title, final String description){
-        this.id = id;
+    public Category(final String title, final String description){
         this.title = title;
         this.description = description;
     }
 
 
-
     @Override
     public String toString() {
-        return "{\"id\": " + id +
-                ", \"title\": \"" + title + "\"" +
-                ", \"description\": \"" + description + "\"}";
-    }
-
-    public Integer getId() {
-        return id;
+        return "{\"title\":\"" + title + "\"" +
+                ",\"description\":\"" + description + "\"}";
     }
 
     public String getTitle() {
