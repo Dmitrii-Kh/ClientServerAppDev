@@ -1,12 +1,10 @@
-package lab03.lab04;
+package lab04.database;
 
-import lab03.lab04.entities.Product;
+import lab04.ProductFilter;
+import lab04.entities.Product;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -14,25 +12,10 @@ public class DaoProduct {
 
     private final Connection connection;
 
-    public DaoProduct(final String fileName) {
-        try {
-            Class.forName("org.sqlite.JDBC");
-            this.connection = DriverManager.getConnection("jdbc:sqlite:" + fileName);
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException("SQLite JDBC not found!", e);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-        initTable();
+    public DaoProduct(final Connection connection) {
+       this.connection = connection;
     }
 
-    public void initTable() {
-        try (Statement statement = connection.createStatement()) {
-            statement.execute("create table if not exists 'products' ('id' INTEGER PRIMARY KEY AUTOINCREMENT, 'title' VARCHAR(250), 'price' DECIMAL(10, 3), 'quantity' INTEGER)");
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to create a table!", e);
-        }
-    }
 
     public int insertProduct(final Product product) {
         try (PreparedStatement insertStatement = connection.prepareStatement("insert into 'products'('title', 'price', 'quantity') values (?, ?, ?)")) {
@@ -60,19 +43,17 @@ public class DaoProduct {
         }
     }
 
-    public List<Product> getProductList(final int page, final int size, final Criteria criteria) {
+    public Product getProduct(int id){
+        ProductFilter productFilter = new ProductFilter();
+        productFilter.setIds(Set.of(id));
+        return getProductList(0, 1, productFilter).get(0);
+    }
+
+    public List<Product> getProductList(final int page, final int size, ProductFilter productFilter) {
         try (final Statement statement = connection.createStatement()) {
 
-            final String query = Stream.of(
-                    like("title", criteria.getQuery()),
-                    in("id", criteria.getIds()),
-                    range("price", criteria.getFromPrice(), criteria.getToPrice()),
-                    range("quantity", criteria.getFromQuantity(), criteria.getToQuantity())
-            )
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.joining(" AND "));
+            final String where = createWhereClause(productFilter);
 
-            final String where = query.isEmpty() ? "" : "where " + query;
             final String finalSqlQuery = String.format("select * from 'products' %s limit %s offset %s", where, size, page * size);
             System.out.println(finalSqlQuery);
             final ResultSet resultSet = statement.executeQuery(finalSqlQuery);
@@ -82,12 +63,29 @@ public class DaoProduct {
             while (resultSet.next()) {
                 products.add(new Product(resultSet.getInt("id"),
                         resultSet.getString("title"),
-                        resultSet.getInt("price"), resultSet.getInt("quantity")));
+                        resultSet.getString("description"),
+                        resultSet.getString("producer"),
+                        resultSet.getInt("price"),
+                        resultSet.getInt("quantity")));
             }
             return products;
         } catch (SQLException e) {
             throw new RuntimeException("Failed to create list by criteria!", e);
         }
+    }
+
+    private static String createWhereClause(ProductFilter productFilter){
+        final String query = Stream.of(
+                like("title", productFilter.getQuery()),
+                in("id", productFilter.getIds()),
+                range("price", productFilter.getFromPrice(), productFilter.getToPrice()),
+                range("quantity", productFilter.getFromQuantity(), productFilter.getToQuantity())
+        )
+                .filter(Objects::nonNull)
+                .collect(Collectors.joining(" AND "));
+
+        final String where = query.isEmpty() ? "" : "where " + query;
+        return where;
     }
 
     private static String like(final String fieldName, final String query) {
