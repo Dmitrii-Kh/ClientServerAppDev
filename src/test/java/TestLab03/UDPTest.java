@@ -13,7 +13,7 @@ import java.net.UnknownHostException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class MainTest {
+public class UDPTest {
 
 
     @Test
