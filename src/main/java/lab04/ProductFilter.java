@@ -1,8 +1,8 @@
-package lab03.lab04;
+package lab04;
 
 import java.util.Set;
 
-public class Criteria {
+public class ProductFilter {
 
     private Set<Integer> ids;
     private String query;
