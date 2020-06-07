@@ -61,7 +61,7 @@ public class DBTest {
     @Test
     void shouldPass_whenCorrectlyListedByCriteria() {
         db.insertCategory(new Category("Non_food", "not food goes here"));
-        for (int i = 1; i < 7; i++) {
+        for (int i = 1; i < 8; i++) {
             db.insertProduct(new Product("product" + i, "test product", "producer", i * 0.5 + i, i * i, "Non_food"));
         }
         db.getProductList(0, 10, new ProductFilter()).forEach(System.out::println);
@@ -70,13 +70,14 @@ public class DBTest {
         filter.setFromPrice(4.0);
         filter.setToPrice(10.0);
         filter.setFromQuantity(10);
-        filter.setIds(new HashSet<>(Arrays.asList(5,6)));
+        filter.setToQuantity(36);
+        filter.setIds(new HashSet<>(Arrays.asList(5,6,7)));
 
-        String expected[] = {"product5", "product6"};
+        int expected[] = {5,6};
 
-        List<Product> productList = db.getProductList(0,10,filter);
+        List<Product> productList = db.getProductList(0,10, filter);
         for (int i = 0; i < expected.length; i++) {
-            assertEquals(productList.get(i).getTitle(), expected[i]);
+            assertEquals(expected[i], productList.get(i).getId());
         }
     }
 
