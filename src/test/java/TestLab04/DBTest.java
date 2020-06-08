@@ -4,10 +4,10 @@ import lab04.ProductFilter;
 import lab04.database.Database;
 import lab04.entities.Category;
 import lab04.entities.Product;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import java.util.Arrays;
-import java.util.HashSet;
+
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -17,9 +17,7 @@ public class DBTest {
 
     @BeforeAll
     static void init() {
-        db = Database.getInstance();
-        db.deleteAllCategories();
-        db.deleteAllProducts();
+        db = Database.getInstance("testDB.db");
     }
 
     @Test
@@ -37,11 +35,12 @@ public class DBTest {
         assertEquals(("{\"title\":\"categoryTitle\",\"description\":\"new description here\"}"), db.getCategory("categoryTitle").toString());
     }
 
-//    @Test
-//    void shouldPass_whenProductCategoryDeletedSuccessfully() {
-//        db.deleteCategory("categoryTitle");
-//        assertEquals("[]", db.getCategoryList(0, 10).toString());
-//    }
+    @Test
+    void shouldPass_whenProductCategoryDeletedSuccessfully() {
+        db.insertCategory(new Category("categoryToDelete", "desc"));
+        db.deleteCategory("categoryToDelete");
+        assertNull(db.getCategory("categoryToDelete"));
+    }
 
     @Test
     void shouldPass_whenProductInsertedSuccessfully() {
@@ -70,16 +69,32 @@ public class DBTest {
         filter.setFromPrice(4.0);
         filter.setToPrice(10.0);
         filter.setFromQuantity(10);
-        filter.setToQuantity(36);
-        filter.setIds(new HashSet<>(Arrays.asList(5,6,7)));
+        filter.setToQuantity(35);
+        filter.setQuery("product");
 
-        int expected[] = {5,6};
+        String expected[] = {"product4", "product5"};
 
-        List<Product> productList = db.getProductList(0,10, filter);
-        for (int i = 0; i < expected.length; i++) {
-            assertEquals(expected[i], productList.get(i).getId());
-        }
+        List<Product> productList = db.getProductList(0, 10, filter);
+        for (int i = 0; i < expected.length; i++)
+            assertEquals(expected[i], productList.get(i).getTitle());
     }
 
+    @Test
+    void shouldPass_whenProductsDeletedSuccessfully() {
+        db.insertProduct(new Product("productToDelete0", "test product", "producer", 10, 10, "Non_food"));
+        db.insertProduct(new Product("productToDelete1", "test product", "producer", 10, 10, "Non_food"));
+        db.deleteProduct("productToDelete0");
+        db.deleteProduct("productToDelete1");
+        assertNull(db.getProduct("productToDelete0"));
+        assertNull(db.getProduct("productToDelete1"));
+    }
+
+    @AfterAll
+    static void shouldPass_whenDeletedAll() {
+        db.deleteAllCategories();
+        assertEquals("[]", db.getCategoryList(0, 10).toString());
+        db.deleteAllProducts();
+        assertEquals("[]", db.getProductList(0, 10, new ProductFilter()).toString());
+    }
 
 }

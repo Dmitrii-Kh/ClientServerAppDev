@@ -15,9 +15,7 @@ public class Database {
     public static final String fileName = "database.db";
 
     private static volatile Database instance;
-
     private final Connection connection;
-
     private final DaoProduct  daoProduct;
     private final DaoCategory daoCategory;
 
@@ -29,6 +27,19 @@ public class Database {
                 localInstance = instance;
                 if (localInstance == null) {
                     instance = localInstance = new Database();
+                }
+            }
+        }
+        return localInstance;
+    }
+
+    public static Database getInstance(final String fileName) {
+        Database localInstance = instance;
+        if (localInstance == null) {
+            synchronized (Database.class) {
+                localInstance = instance;
+                if (localInstance == null) {
+                    instance = localInstance = new Database(fileName);
                 }
             }
         }
@@ -51,6 +62,26 @@ public class Database {
         daoProduct = new DaoProduct(connection);
         daoCategory = new DaoCategory(connection);
     }
+
+    private Database(final String fileName) {
+        try {
+            Class.forName("org.sqlite.JDBC");
+            connection = DriverManager.getConnection("jdbc:sqlite:" + fileName);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException("SQLite JDBC not found!", e);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        initProductGroupsTable();
+        initProductsTable();
+
+        daoProduct = new DaoProduct(connection);
+        daoCategory = new DaoCategory(connection);
+    }
+
+
+
 
     private void initProductGroupsTable(){
         try (Statement statement = connection.createStatement()) {
