@@ -17,10 +17,8 @@ import lab05.domain.LoginResponse;
 import lab05.domain.ProductCredentials;
 import lab05.domain.UserCredentials;
 import org.apache.commons.codec.digest.DigestUtils;
-
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -69,7 +67,8 @@ public class Server {
         this.endpoints = new ArrayList<Endpoint>();
         endpoints.add(Endpoint.of("\\/login", this::loginHandler, (a, b) -> new HashMap<>()));
         endpoints.add(Endpoint.of("^\\/api\\/product\\/(\\d+)$", this::getProductByIdHandler, this::getProductParamId));
-        endpoints.add(Endpoint.of("\\/api\\/product", this::addProduct, (a, b) -> new HashMap<>()));
+        endpoints.add(Endpoint.of("^\\/api\\/product\\/(\\d+)$", this::deleteProductByIdHandler, this::getProductParamId));
+        endpoints.add(Endpoint.of("\\/api\\/product", this::addProductHandler, (a, b) -> new HashMap<>()));
 
 
         this.server = HttpServer.create();
@@ -100,7 +99,6 @@ public class Server {
             endpoint.get().handler()
                     .handle(exchange);
         } else {
-            // default handler
             // 404
             handlerNotFound(exchange);
         }
@@ -142,6 +140,36 @@ public class Server {
         }
     }
 
+    private void deleteProductByIdHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
+
+        try (final InputStream inputStream = exchange.getRequestBody()) {
+            exchange.getResponseHeaders()
+                    .add("Content-Type", "application/json");
+
+
+            if (!exchange.getPrincipal().getRealm().equals("admin")) {
+                writeResponse(exchange, 403, ErrorResponse.of("No permission"));
+                return;
+            }
+
+            final int productId = Integer.parseInt(pathParams.get("productId"));
+            Product productToDelete = db.getProduct(productId);
+            db.deleteProduct(productToDelete.getTitle());
+
+
+            if (productToDelete != null) {
+                if(db.getProduct(productId) == null)
+                    writeResponse(exchange, 204, "");
+            } else {
+                writeResponse(exchange, 404, ErrorResponse.of("No such product"));
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
     private Map<String, String> getProductParamId(final String uri, final Pattern pattern) {
         final Matcher matcher = pattern.matcher(uri);
         matcher.find();
@@ -153,7 +181,7 @@ public class Server {
 
 
 
-    private void addProduct(final HttpExchange exchange, final Map<String, String> pathParams) {
+    private void addProductHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
 
         try (final InputStream requestBody = exchange.getRequestBody()) {
             exchange.getResponseHeaders()
@@ -178,7 +206,7 @@ public class Server {
             final int productId = db.insertProduct(product);
 
            if (productId != -1) {
-                writeResponse(exchange, 201, ErrorResponse.of("Created! id : " + productId));
+                writeResponse(exchange, 201, "Created! id : " + productId);
             } else {
                 writeResponse(exchange, 409, ErrorResponse.of("Conflict!"));
             }
