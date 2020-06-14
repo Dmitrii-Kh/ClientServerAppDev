@@ -3,6 +3,7 @@ package lab04.database;
 import lab04.ProductFilter;
 import lab04.entities.Category;
 import lab04.entities.Product;
+import lab04.entities.User;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -16,8 +17,9 @@ public class Database {
 
     private static volatile Database instance;
     private final Connection connection;
-    private final DaoProduct  daoProduct;
+    private final DaoProduct daoProduct;
     private final DaoCategory daoCategory;
+    private final DaoUser daoUser;
 
 
     public static Database getInstance() {
@@ -58,9 +60,11 @@ public class Database {
 
         initProductGroupsTable();
         initProductsTable();
+        initUserTable();
 
         daoProduct = new DaoProduct(connection);
         daoCategory = new DaoCategory(connection);
+        daoUser = new DaoUser(connection);
     }
 
     private Database(final String fileName) {
@@ -75,15 +79,15 @@ public class Database {
 
         initProductGroupsTable();
         initProductsTable();
+        initUserTable();
 
         daoProduct = new DaoProduct(connection);
         daoCategory = new DaoCategory(connection);
+        daoUser = new DaoUser(connection);
     }
 
 
-
-
-    private void initProductGroupsTable(){
+    private void initProductGroupsTable() {
         try (Statement statement = connection.createStatement()) {
             statement.execute(
                     "CREATE TABLE IF NOT EXISTS 'categories' (" +
@@ -95,18 +99,18 @@ public class Database {
         }
     }
 
-    private void initProductsTable(){
+    private void initProductsTable() {
         try (Statement statement = connection.createStatement()) {
             statement.execute(
                     "CREATE TABLE IF NOT EXISTS 'products' (" +
-                    "'id' INTEGER PRIMARY KEY AUTOINCREMENT," +
-                    "'title' VARCHAR(200) NOT NULL UNIQUE," +
-                    "'description' VARCHAR(700) NOT NULL," +
-                    "'producer' VARCHAR(200) NOT NULL," +
-                    "'price' DECIMAL(10, 3) NOT NULL," +
-                    "'quantity' INTEGER NOT NULL," +
-                    "'category' VARCHAR(200) NOT NULL," +
-                    "FOREIGN KEY(category) REFERENCES categories(title) ON UPDATE CASCADE ON DELETE CASCADE)"
+                            "'id' INTEGER PRIMARY KEY AUTOINCREMENT," +
+                            "'title' VARCHAR(200) NOT NULL UNIQUE," +
+                            "'description' VARCHAR(700) NOT NULL," +
+                            "'producer' VARCHAR(200) NOT NULL," +
+                            "'price' DECIMAL(10, 3) NOT NULL," +
+                            "'quantity' INTEGER NOT NULL," +
+                            "'category' VARCHAR(200) NOT NULL," +
+                            "FOREIGN KEY(category) REFERENCES categories(title) ON UPDATE CASCADE ON DELETE CASCADE)"
             );
         } catch (SQLException e) {
             throw new RuntimeException("Failed to create products table!", e);
@@ -114,6 +118,13 @@ public class Database {
     }
 
 
+    private void initUserTable() {
+        try (final Statement statement = connection.createStatement()) {
+            statement.execute("create table if not exists 'users'('id' INTEGER PRIMARY KEY AUTOINCREMENT, 'login' VARCHAR(50) NOT NULL, 'password' VARCHAR(250) NOT NULL, 'role' VARCHAR(20) NOT NULL, UNIQUE (login))");
+        } catch (final SQLException e) {
+            throw new RuntimeException("Can't create table", e);
+        }
+    }
 
 
     public int insertCategory(final Category category) {
@@ -128,7 +139,7 @@ public class Database {
         return daoCategory.getCategoryList(page, size);
     }
 
-    public void updateCategory(String updateColumnName, String newValue, String searchColumnName, String searchValue){
+    public void updateCategory(String updateColumnName, String newValue, String searchColumnName, String searchValue) {
         daoCategory.update(updateColumnName, newValue, searchColumnName, searchValue);
     }
 
@@ -136,21 +147,20 @@ public class Database {
         daoCategory.delete(title);
     }
 
-    public void deleteAllCategories(){
+    public void deleteAllCategories() {
         daoCategory.deleteAll();
     }
-
 
 
     public int insertProduct(final Product product) {
         return daoProduct.insertProduct(product);
     }
 
-    public Product getProduct(int id){
+    public Product getProduct(int id) {
         return daoProduct.getProduct(id);
     }
 
-    public Product getProduct(String title){
+    public Product getProduct(String title) {
         return daoProduct.getProduct(title);
     }
 
@@ -158,7 +168,7 @@ public class Database {
         return daoProduct.getProductList(page, size, productFilter);
     }
 
-    public void updateProduct(String updateColumnName, String newValue, String searchColumnName, String searchValue){
+    public void updateProduct(String updateColumnName, String newValue, String searchColumnName, String searchValue) {
         daoProduct.update(updateColumnName, newValue, searchColumnName, searchValue);
     }
 
@@ -166,16 +176,25 @@ public class Database {
         daoProduct.delete(title);
     }
 
-    public void deleteAllProducts(){
+    public void deleteAllProducts() {
         daoProduct.deleteAll();
     }
 
 
-    public void shutdown(){
+    public int insertUser(final User user) {
+        return daoUser.insertUser(user);
+    }
+
+    public User getUser(final String login) {
+        return daoUser.getByLogin(login);
+    }
+
+
+    public void shutdown() {
         try {
             connection.close();
         } catch (SQLException e) {
-            throw  new RuntimeException("Failed to close connection!", e);
+            throw new RuntimeException("Failed to close connection!", e);
         }
     }
 }

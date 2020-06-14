@@ -1,5 +1,8 @@
 package lab04.entities;
 
+import lombok.Builder;
+
+@Builder
 public class Category {
 
     private String title;
