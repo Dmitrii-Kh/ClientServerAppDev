@@ -10,7 +10,7 @@ import lab04.entities.User;
 public class JwtService {
     private static final Key SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256);
 
-
+    //todo made valid for limited period of time
     public static String generateToken(final User user) {
 
         return Jwts.builder()

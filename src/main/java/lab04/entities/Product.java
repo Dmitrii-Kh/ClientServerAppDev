@@ -1,6 +1,7 @@
 package lab04.entities;
 
 import lombok.Builder;
+import lombok.experimental.Tolerate;
 
 @Builder
 public class Product {
@@ -11,7 +12,7 @@ public class Product {
     private String description;
     private String producer;
     private double price;
-    private int    quantity;
+    private int quantity;
     private String category;
 
 
@@ -30,6 +31,7 @@ public class Product {
                    final int quantity, final String category) {
         this(null, title, description, producer, price, quantity, category);
     }
+
 
     @Override
     public String toString() {

@@ -22,6 +22,9 @@ public class DaoProduct {
         try (PreparedStatement insertStatement = connection.prepareStatement(
                 "insert into 'products'('title', 'description', 'producer', 'price', 'quantity', 'category') " +
                         "values (?, ?, ?, ?, ?, ?)")) {
+
+            if(product.getPrice() < 0 || product.getQuantity() < 0) return -1;
+
             insertStatement.setString(1, product.getTitle());
             insertStatement.setString(2, product.getDescription());
             insertStatement.setString(3, product.getProducer());

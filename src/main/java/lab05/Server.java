@@ -14,6 +14,7 @@ import lab05.HTTP.Endpoint;
 import lab05.Service.JwtService;
 import lab05.domain.ErrorResponse;
 import lab05.domain.LoginResponse;
+import lab05.domain.ProductCredentials;
 import lab05.domain.UserCredentials;
 import org.apache.commons.codec.digest.DigestUtils;
 
@@ -68,6 +69,7 @@ public class Server {
         this.endpoints = new ArrayList<Endpoint>();
         endpoints.add(Endpoint.of("\\/login", this::loginHandler, (a, b) -> new HashMap<>()));
         endpoints.add(Endpoint.of("^\\/api\\/product\\/(\\d+)$", this::getProductByIdHandler, this::getProductParamId));
+        endpoints.add(Endpoint.of("\\/api\\/product", this::addProduct, (a, b) -> new HashMap<>()));
 
 
         this.server = HttpServer.create();
@@ -89,13 +91,13 @@ public class Server {
 
         final String uri = exchange.getRequestURI().toString();
 
-        final Optional<Endpoint> enpoint = endpoints.stream()
-                .filter(endpoint -> endpoint.matches(uri))
+        final Optional<Endpoint> endpoint = endpoints.stream()
+                .filter(anEndpoint -> anEndpoint.matches(uri))
                 .findFirst();
 
 
-        if (enpoint.isPresent()) {
-            enpoint.get().handler()
+        if (endpoint.isPresent()) {
+            endpoint.get().handler()
                     .handle(exchange);
         } else {
             // default handler
@@ -115,7 +117,7 @@ public class Server {
 
     private void getProductByIdHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
 
-        try (final InputStream inputStream = exchange.getRequestBody(); final OutputStream os = exchange.getResponseBody()) {
+        try (final InputStream inputStream = exchange.getRequestBody()) {
             exchange.getResponseHeaders()
                     .add("Content-Type", "application/json");
 
@@ -147,6 +149,43 @@ public class Server {
         return new HashMap<String, String>() {{
             put("productId", matcher.group(1));
         }};
+    }
+
+
+
+    private void addProduct(final HttpExchange exchange, final Map<String, String> pathParams) {
+
+        try (final InputStream requestBody = exchange.getRequestBody()) {
+            exchange.getResponseHeaders()
+                    .add("Content-Type", "application/json");
+
+
+            if (!exchange.getPrincipal().getRealm().equals("admin")) {
+                writeResponse(exchange, 403, ErrorResponse.of("No permission"));
+                return;
+            }
+
+            final ProductCredentials productCredentials = OBJECT_MAPPER.readValue(requestBody, ProductCredentials.class);
+            final Product product = Product.builder()
+                    .title(productCredentials.getTitle())
+                    .description(productCredentials.getDescription())
+                    .producer(productCredentials.getProducer())
+                    .price(productCredentials.getPrice())
+                    .quantity(productCredentials.getQuantity())
+                    .category(productCredentials.getCategory())
+                    .build();
+
+            final int productId = db.insertProduct(product);
+
+           if (productId != -1) {
+                writeResponse(exchange, 201, ErrorResponse.of("Created! id : " + productId));
+            } else {
+                writeResponse(exchange, 409, ErrorResponse.of("Conflict!"));
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 
