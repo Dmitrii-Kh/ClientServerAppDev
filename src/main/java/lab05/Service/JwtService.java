@@ -17,6 +17,7 @@ public class JwtService {
                 .setSubject(user.getLogin())
                 .signWith(SECRET_KEY)
                 .claim("role", user.getRole())
+                //todo .setExpiration()
                 .compact();
     }
 
