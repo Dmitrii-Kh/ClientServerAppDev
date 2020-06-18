@@ -15,18 +15,19 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class Endpoint {
 
+    private final String method;
     private final Pattern urlPattern;
     private final CustomHandler httpHandler;
     private final BiFunction<String, Pattern, Map<String, String>> paramsExtractor;
 
 
-    public static Endpoint of(final String pattern, final CustomHandler httpHandler, final BiFunction<String, Pattern, Map<String, String>> paramsExtractor) {
-        return new Endpoint(Pattern.compile(pattern), httpHandler, paramsExtractor);
+    public static Endpoint of(final String method, String pattern, final CustomHandler httpHandler, final BiFunction<String, Pattern, Map<String, String>> paramsExtractor) {
+        return new Endpoint(method.toLowerCase(), Pattern.compile(pattern), httpHandler, paramsExtractor);
     }
 
 
-    public boolean matches(final String uri) {
-        return urlPattern.matcher(uri).matches();
+    public boolean matches(final String method, final String uri) {
+        return this.method.equals(method.toLowerCase()) && urlPattern.matcher(uri).matches();
     }
 
 
