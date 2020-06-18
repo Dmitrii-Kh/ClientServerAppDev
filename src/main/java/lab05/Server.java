@@ -38,29 +38,6 @@ public class Server {
 
         processPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(maxProcessThreads);
 
-//        db.insertUser(User.builder()
-//                .login("admin")
-//                .password(DigestUtils.md5Hex("password"))
-//                .role("admin")
-//                .build());
-//
-//
-//        db.insertCategory(Category.builder().title("food").description("smth to eat").build());
-//
-//        for (int i = 0; i < 7; i++) {
-//            db.insertProduct(Product.builder()
-//                    .title("product" + i)
-//                    .description("description")
-//                    .producer("producer" + i)
-//                    .price(Math.random() * 100)
-//                    .quantity(i * i + 1)
-//                    .category("food")
-//                    .build());
-//        }
-
-
-
-
         this.server = HttpServer.create();
 
         server.bind(new InetSocketAddress(port), 0);
