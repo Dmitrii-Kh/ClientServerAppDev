@@ -2,10 +2,7 @@ package lab04.database;
 
 import lab04.entities.User;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 
 public class DaoUser {
 
@@ -48,6 +45,15 @@ public class DaoUser {
             return null;
         } catch (final SQLException e) {
             throw new RuntimeException("Can't get user by login: " + login, e);
+        }
+    }
+
+    public void deleteAll() {
+        try (final Statement statement = connection.createStatement()) {
+            statement.executeUpdate("delete from 'users'");
+            statement.executeUpdate("delete from sqlite_sequence where name='users'");
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to delete all users!", e);
         }
     }
 

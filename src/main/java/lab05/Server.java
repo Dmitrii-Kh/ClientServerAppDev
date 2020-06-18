@@ -1,30 +1,25 @@
 package lab05;
 
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.Authenticator;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpPrincipal;
 import com.sun.net.httpserver.HttpServer;
 import lab04.database.Database;
-import lab04.entities.Category;
-import lab04.entities.Product;
 import lab04.entities.User;
 import lab05.HTTP.Endpoint;
 import lab05.Service.JwtService;
-import lab05.domain.*;
-import org.apache.commons.codec.digest.DigestUtils;
-
+import lab05.domain.ErrorResponse;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.InetSocketAddress;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class Server {
+
 
     private final Database db = Database.getInstance();
 
@@ -39,7 +34,7 @@ public class Server {
 
     private ThreadPoolExecutor processPool;
 
-    public Server(int maxProcessThreads) throws IOException {
+    public Server(int port, int maxProcessThreads) throws IOException {
 
         processPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(maxProcessThreads);
 
@@ -49,16 +44,10 @@ public class Server {
 //                .role("admin")
 //                .build());
 //
-//        db.insertUser(User.builder()
-//                .login("user")
-//                .password(DigestUtils.md5Hex("password"))
-//                .role("user")
-//                .build());
-//
 //
 //        db.insertCategory(Category.builder().title("food").description("smth to eat").build());
 //
-//        for (int i = 0; i < 10; i++) {
+//        for (int i = 0; i < 7; i++) {
 //            db.insertProduct(Product.builder()
 //                    .title("product" + i)
 //                    .description("description")
@@ -69,14 +58,12 @@ public class Server {
 //                    .build());
 //        }
 
-//        endpoints.add(Endpoint.of("\\/login", this::loginHandler, (a, b) -> new HashMap<>()));
-//        endpoints.add(Endpoint.of("^\\/api\\/product\\/(\\d+)$", this::GetOrDeleteProductByIdHandler, this::getProductParamId));
-//        endpoints.add(Endpoint.of("\\/api\\/product", this::PutOrPostProductByIdHandler, (a, b) -> new HashMap<>()));
+
 
 
         this.server = HttpServer.create();
 
-        server.bind(new InetSocketAddress(8080), 0);
+        server.bind(new InetSocketAddress(port), 0);
 
         server.createContext("/", this::rootHandler)
                 .setAuthenticator(new MyAuthenticator());
@@ -100,13 +87,14 @@ public class Server {
         exchange.getResponseHeaders()
                 .add("Content-Type", "application/json");
 
-        if (!exchange.getPrincipal().getRealm().equals("admin")) {
+        final String uri = exchange.getRequestURI().toString();
+
+        if (!exchange.getPrincipal().getRealm().equals("admin") && !uri.equals("/login")) {
             writeResponse(exchange, 403, ErrorResponse.of("No permission"));
             return;
         }
 
 
-        final String uri = exchange.getRequestURI().toString();
 
         final Optional<Endpoint> endpoint = endpoints.stream()
                 .filter(anEndpoint -> anEndpoint.matches(exchange.getRequestMethod(), uri))
@@ -124,7 +112,6 @@ public class Server {
             });
 
         } else {
-            // 404
             handlerNotFound(exchange);
         }
     }
@@ -160,7 +147,7 @@ public class Server {
                     }
 
                 } catch (Exception e) {
-                    return new Failure(403);
+                    return new Failure(401);
                 }
             }
 
@@ -173,6 +160,10 @@ public class Server {
         final byte[] bytes = OBJECT_MAPPER.writeValueAsBytes(response);
         exchange.sendResponseHeaders(statusCode, bytes.length);
         exchange.getResponseBody().write(bytes);
+    }
+
+    public Database db() {
+        return db;
     }
 
 }

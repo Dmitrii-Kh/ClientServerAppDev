@@ -189,6 +189,9 @@ public class Database {
         return daoUser.getByLogin(login);
     }
 
+    public void deleteAllUsers() {
+        daoUser.deleteAll();
+    }
 
     public void shutdown() {
         try {

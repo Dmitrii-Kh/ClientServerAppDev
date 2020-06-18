@@ -27,8 +27,7 @@ public class Endpoints {
     private final ArrayList<Endpoint> endpoints = new ArrayList<>();
 
 
-
-    Endpoints(){
+    public Endpoints() {
         endpoints.add(Endpoint.of("POST", "\\/login", this::loginHandler, (a, b) -> new HashMap<>()));
 
         endpoints.add(Endpoint.of("GET", "^\\/api\\/product\\/(\\d+)$", this::GetProductByIdHandler, this::getProductParamId));
@@ -39,10 +38,9 @@ public class Endpoints {
     }
 
 
-    public ArrayList<Endpoint> getAllEndpoints(){
+    public ArrayList<Endpoint> getAllEndpoints() {
         return endpoints;
     }
-
 
 
     private void GetProductByIdHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
@@ -67,12 +65,11 @@ public class Endpoints {
     }
 
 
-
     private void getProductByIdHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
 
         try {
-            final int     productId = Integer.parseInt(pathParams.get("productId"));
-            final Product product   = db.getProduct(productId);
+            final int productId = Integer.parseInt(pathParams.get("productId"));
+            final Product product = db.getProduct(productId);
 
             if (product != null) {
                 Server.writeResponse(exchange, 200, product);
@@ -96,13 +93,12 @@ public class Endpoints {
                 if (db.getProduct(productId) == null)                               //assert that product is deleted
                     exchange.sendResponseHeaders(204, -1);
             } else {
-                 Server.writeResponse(exchange, 404, ErrorResponse.of("No such product"));
+                Server.writeResponse(exchange, 404, ErrorResponse.of("No such product"));
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-
 
 
     private void PutProductByIdHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
@@ -117,7 +113,6 @@ public class Endpoints {
     }
 
 
-
     private void PostProductByIdHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
         try {
 
@@ -129,10 +124,7 @@ public class Endpoints {
     }
 
 
-
-
-
-    private void modifyProductHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
+    private void modifyProductHandler(final HttpExchange exchange, final Map<String, String> pathParams) throws IOException {
 
         try (final InputStream requestBody = exchange.getRequestBody()) {
 
@@ -151,22 +143,31 @@ public class Endpoints {
                 if (updateProductCredentials.getProducer() != null)
                     db.updateProduct("producer", updateProductCredentials.getProducer(), "id", id);
 
-                if (updateProductCredentials.getPrice() != null)
-                    db.updateProduct("price", String.valueOf(updateProductCredentials.getPrice()), "id", id);
-
-                if (updateProductCredentials.getQuantity() != null)
-                    db.updateProduct("quantity", String.valueOf(updateProductCredentials.getQuantity()), "id", id);
-
+                if (updateProductCredentials.getPrice() != null) {
+                    if (updateProductCredentials.getPrice() > 0) {
+                        db.updateProduct("price", String.valueOf(updateProductCredentials.getPrice()), "id", id);
+                    } else {
+                        throw new IllegalArgumentException();
+                    }
+                }
+                if (updateProductCredentials.getQuantity() != null) {
+                    if(updateProductCredentials.getQuantity() > 0) {
+                        db.updateProduct("quantity", String.valueOf(updateProductCredentials.getQuantity()), "id", id);
+                    } else {
+                        throw new IllegalArgumentException();
+                    }
+                }
                 if (updateProductCredentials.getCategory() != null)
                     db.updateProduct("category", updateProductCredentials.getCategory(), "id", id);
 
-                //todo handle 409
                 exchange.sendResponseHeaders(204, -1);
 
             } else {
                 Server.writeResponse(exchange, 404, ErrorResponse.of("No such product"));
             }
 
+        } catch (IllegalArgumentException e){
+            Server.writeResponse(exchange, 409, ErrorResponse.of("Conflict"));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -190,9 +191,9 @@ public class Endpoints {
             final int productId = db.insertProduct(product);
 
             if (productId != -1) {
-                Server.writeResponse(exchange, 201, "Created! id : " + productId);
+                Server.writeResponse(exchange, 201, "Created " + productId);
             } else {
-                Server.writeResponse(exchange, 409, ErrorResponse.of("Conflict!"));
+                Server.writeResponse(exchange, 409, ErrorResponse.of("Conflict"));
             }
 
         } catch (Exception e) {
@@ -205,7 +206,7 @@ public class Endpoints {
 
         try (final InputStream requestBody = exchange.getRequestBody()) {
             final UserCredentials userCredential = OBJECT_MAPPER.readValue(requestBody, UserCredentials.class);
-            final User            user           = db.getUser(userCredential.getLogin());
+            final User user = db.getUser(userCredential.getLogin());
 
             if (user != null) {
                 if (user.getPassword().equals(DigestUtils.md5Hex(userCredential.getPassword()))) {

@@ -6,7 +6,7 @@ import java.io.IOException;
 
 public class MainLab05 {
     public static void main(String[] args) throws IOException {
-        Server server = new Server(3);
+        Server server = new Server(8080,3);
         Endpoints endpoints = new Endpoints();
 
         for(Endpoint endpoint: endpoints.getAllEndpoints()){
