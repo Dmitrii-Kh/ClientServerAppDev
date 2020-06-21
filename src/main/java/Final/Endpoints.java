@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -40,6 +41,9 @@ public class Endpoints {
         endpoints.add(Endpoint.of("DELETE", "\\/api\\/category", this::DeleteCategoryHandler, (a, b) -> new HashMap<>()));
         endpoints.add(Endpoint.of("POST", "\\/api\\/category", this::PostCategoryHandler, (a, b) -> new HashMap<>()));
         endpoints.add(Endpoint.of("PUT", "\\/api\\/category", this::PutCategoryHandler, (a, b) -> new HashMap<>()));
+
+        endpoints.add(Endpoint.of("GET", "\\/api\\/product/search", this::SearchForProductHandler, (a, b) -> new HashMap<>()));
+
     }
 
 
@@ -267,6 +271,23 @@ public class Endpoints {
         }
     }
 
+    private void SearchForProductHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
+        try (final InputStream requestBody = exchange.getRequestBody()) {
+            final SearchQuery searchQuery = OBJECT_MAPPER.readValue(requestBody, SearchQuery.class);
+
+            ProductFilter filter = new ProductFilter();
+            filter.setQuery(searchQuery.getQuery());
+            List<Product> resList = db.getProductList(0, 10, filter);
+
+            if (resList.size() != 0) {
+                    ServerAPI.writeResponse(exchange, 200, resList);
+            } else {
+                ServerAPI.writeResponse(exchange, 404, ErrorResponse.of("No such products"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     private void loginHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
 
