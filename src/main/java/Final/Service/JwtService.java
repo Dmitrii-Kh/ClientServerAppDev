@@ -11,7 +11,7 @@ import java.util.Date;
 
 public class JwtService {
     private static final Key SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256);
-    private static final long ttlMillis = 10000;
+    private static final long ttlMillis = 10000000;
 
     public static String generateToken(final User user) {
 

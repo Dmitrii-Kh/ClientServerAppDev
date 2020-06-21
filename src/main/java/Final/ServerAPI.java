@@ -10,6 +10,7 @@ import Final.entities.User;
 import Final.HTTP.Endpoint;
 import Final.Service.JwtService;
 import Final.domain.ErrorResponse;
+import org.apache.commons.codec.digest.DigestUtils;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -43,6 +44,11 @@ public class ServerAPI {
         server.createContext("/", this::rootHandler)
                 .setAuthenticator(new MyAuthenticator());
 
+        db.insertUser(User.builder()
+                .login("admin")
+                .password(DigestUtils.md5Hex("password"))
+                .role("admin")
+                .build());
         server.start();
     }
 

@@ -37,7 +37,7 @@ public class Endpoints {
         endpoints.add(Endpoint.of("PUT", "\\/api\\/product", this::PutProductHandler, (a, b) -> new HashMap<>()));
 
         endpoints.add(Endpoint.of("GET", "\\/api\\/category", this::GetCategoryByTitleHandler, (a, b) -> new HashMap<>()));
-        endpoints.add(Endpoint.of("DELETE", "\\/api\\/category", this::DeleteCategoryHandler,(a, b) -> new HashMap<>()));
+        endpoints.add(Endpoint.of("DELETE", "\\/api\\/category", this::DeleteCategoryHandler, (a, b) -> new HashMap<>()));
         endpoints.add(Endpoint.of("POST", "\\/api\\/category", this::PostCategoryHandler, (a, b) -> new HashMap<>()));
         endpoints.add(Endpoint.of("PUT", "\\/api\\/category", this::PutCategoryHandler, (a, b) -> new HashMap<>()));
     }
@@ -79,7 +79,6 @@ public class Endpoints {
             e.printStackTrace();
         }
     }
-
 
 
     private void getProductByIdHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
@@ -203,7 +202,11 @@ public class Endpoints {
                     .title(categoryCredentials.getTitle())
                     .description(categoryCredentials.getDescription()).build();
 
-            ServerAPI.writeResponse(exchange, 201, "Created " + categoryCredentials.getTitle());
+            int row = -1;
+            row = db.insertCategory(categoryToInsert);
+
+            if (row > 0)
+                ServerAPI.writeResponse(exchange, 201, "Created " + categoryCredentials.getTitle());
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -236,7 +239,7 @@ public class Endpoints {
 
             if (categoryToUpdate != null) {
                 if (categoryCredentials.getDescription() != null) {
-                    db.updateProduct("description", categoryCredentials.getDescription(), "title", categoryToUpdateTitle);
+                    db.updateCategory("description", categoryCredentials.getDescription(), "title", categoryToUpdateTitle);
                     exchange.sendResponseHeaders(204, -1);
                 }
             } else {
@@ -250,7 +253,7 @@ public class Endpoints {
 
 
     private void GetCategoryByTitleHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
-        try (final InputStream requestBody = exchange.getRequestBody()){
+        try (final InputStream requestBody = exchange.getRequestBody()) {
             final CategoryCredentials categoryCredentials = OBJECT_MAPPER.readValue(requestBody, CategoryCredentials.class);
             final Category category = db.getCategory(categoryCredentials.getTitle());
 
