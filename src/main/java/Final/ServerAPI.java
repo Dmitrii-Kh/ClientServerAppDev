@@ -1,5 +1,7 @@
 package Final;
 
+import Final.entities.Category;
+import Final.entities.Product;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.Authenticator;
 import com.sun.net.httpserver.HttpExchange;
@@ -49,6 +51,18 @@ public class ServerAPI {
                 .password(DigestUtils.md5Hex("password"))
                 .role("admin")
                 .build());
+        db.insertCategory(Category.builder().title("food").description("smth to eat").build());
+
+        for (int i = 0; i < 7; i++) {
+            db.insertProduct(Product.builder()
+                    .title("product" + i)
+                    .description("description")
+                    .producer("producer" + i)
+                    .price(Math.random() * 100)
+                    .quantity(i * i + 1)
+                    .category("food")
+                    .build());
+        }
         server.start();
     }
 
