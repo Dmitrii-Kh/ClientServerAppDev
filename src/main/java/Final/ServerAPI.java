@@ -1,15 +1,16 @@
-package lab05;
+package Final;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.Authenticator;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpPrincipal;
 import com.sun.net.httpserver.HttpServer;
-import lab04.database.Database;
-import lab04.entities.User;
-import lab05.HTTP.Endpoint;
-import lab05.Service.JwtService;
-import lab05.domain.ErrorResponse;
+import Final.database.Database;
+import Final.entities.User;
+import Final.HTTP.Endpoint;
+import Final.Service.JwtService;
+import Final.domain.ErrorResponse;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -18,7 +19,7 @@ import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
-public class Server {
+public class ServerAPI {
 
 
     private final Database db = Database.getInstance();
@@ -34,7 +35,7 @@ public class Server {
 
     private ThreadPoolExecutor processPool;
 
-    public Server(int port, int maxProcessThreads) throws IOException {
+    public ServerAPI(int port, int maxProcessThreads) throws IOException {
 
         processPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(maxProcessThreads);
         this.server = HttpServer.create();
