@@ -18,6 +18,8 @@ public class DaoProduct {
 
 
     public int insertProduct(final Product product) {
+        //if(productTitleAlreadyExists(product.getTitle())) throw new RuntimeException("Product title already exists!");
+
         try (PreparedStatement insertStatement = connection.prepareStatement(
                 "insert into 'products'('title', 'description', 'producer', 'price', 'quantity', 'category') " +
                         "values (?, ?, ?, ?, ?, ?)")) {
@@ -45,7 +47,7 @@ public class DaoProduct {
                     String.format("select count(*) as num_of_products from 'products' where title = '%s'",
                             productTitle));
             result.next();
-            return result.getInt("num_of_products") == 0;
+            return result.getInt("num_of_products") != 0;
         } catch (SQLException e) {
             throw new RuntimeException("Can`t create product with this title", e);
         }

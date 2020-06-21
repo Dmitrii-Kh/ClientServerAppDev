@@ -1,8 +1,7 @@
 package Final;
 
-import Final.Endpoints;
 import Final.HTTP.Endpoint;
-import Final.ServerAPI;
+
 
 import java.io.IOException;
 
@@ -14,6 +13,6 @@ public class MainFinal {
         for(Endpoint endpoint: endpoints.getAllEndpoints()){
             server.addEndpoint(endpoint);
         }
-
     }
+
 }

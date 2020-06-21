@@ -15,6 +15,8 @@ public class DaoCategory {
     }
 
     public int insertCategory(final Category category) {
+       // if(categoryTitleAlreadyExists(category.getTitle())) throw new RuntimeException("Category title already exists!");
+
         try (PreparedStatement insertStatement = connection.prepareStatement(
                 "insert into 'categories'('title', 'description') values (?, ?)")) {
             insertStatement.setString(1, category.getTitle());
@@ -87,6 +89,19 @@ public class DaoCategory {
             statement.executeUpdate("delete from sqlite_sequence where name='categories'");
         } catch (SQLException e) {
             throw new RuntimeException("Failed to delete all!", e);
+        }
+    }
+
+
+    public boolean categoryTitleAlreadyExists(final String categoryTitle) {
+        try (final Statement statement = connection.createStatement()) {
+            final ResultSet result = statement.executeQuery(
+                    String.format("select count(*) as num_of_categories from 'categories' where title = '%s'",
+                            categoryTitle));
+            result.next();
+            return result.getInt("num_of_categories") != 0;
+        } catch (SQLException e) {
+            throw new RuntimeException("Can`t create category with this title", e);
         }
     }
 

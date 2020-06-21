@@ -1,5 +1,6 @@
 package Final;
 
+import Final.entities.Category;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
 import Final.database.Database;
@@ -32,9 +33,13 @@ public class Endpoints {
 
         endpoints.add(Endpoint.of("GET", "^\\/api\\/product\\/(\\d+)$", this::GetProductByIdHandler, this::getProductParamId));
         endpoints.add(Endpoint.of("DELETE", "^\\/api\\/product\\/(\\d+)$", this::DeleteProductByIdHandler, this::getProductParamId));
-
         endpoints.add(Endpoint.of("POST", "\\/api\\/product", this::PostProductByIdHandler, (a, b) -> new HashMap<>()));
-        endpoints.add(Endpoint.of("PUT", "\\/api\\/product", this::PutProductByIdHandler, (a, b) -> new HashMap<>()));
+        endpoints.add(Endpoint.of("PUT", "\\/api\\/product", this::PutProductHandler, (a, b) -> new HashMap<>()));
+
+        endpoints.add(Endpoint.of("GET", "\\/api\\/category", this::GetCategoryByTitleHandler, (a, b) -> new HashMap<>()));
+        endpoints.add(Endpoint.of("DELETE", "\\/api\\/category", this::DeleteCategoryHandler,(a, b) -> new HashMap<>()));
+        endpoints.add(Endpoint.of("POST", "\\/api\\/category", this::PostCategoryHandler, (a, b) -> new HashMap<>()));
+        endpoints.add(Endpoint.of("PUT", "\\/api\\/category", this::PutCategoryHandler, (a, b) -> new HashMap<>()));
     }
 
 
@@ -44,25 +49,37 @@ public class Endpoints {
 
 
     private void GetProductByIdHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
-
         try {
-
             getProductByIdHandler(exchange, pathParams);
-
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     private void DeleteProductByIdHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
-
         try {
             deleteProductByIdHandler(exchange, pathParams);
-
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
+    private void PutProductHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
+        try {
+            addProductHandler(exchange, pathParams);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void PostProductByIdHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
+        try {
+            modifyProductHandler(exchange, pathParams);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 
 
     private void getProductByIdHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
@@ -90,34 +107,11 @@ public class Endpoints {
 
             if (productToDelete != null) {
                 db.deleteProduct(productToDelete.getTitle());
-                if (db.getProduct(productId) == null)                               //assert that product is deleted
+                if (db.getProduct(productId) == null)                               //? assert that product is deleted
                     exchange.sendResponseHeaders(204, -1);
             } else {
                 ServerAPI.writeResponse(exchange, 404, ErrorResponse.of("No such product"));
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-
-    private void PutProductByIdHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
-        try {
-
-            addProductHandler(exchange, pathParams);
-
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-
-    private void PostProductByIdHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
-        try {
-
-            modifyProductHandler(exchange, pathParams);
-
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -134,8 +128,8 @@ public class Endpoints {
             if (db.getProduct(updateProductCredentials.getId()) != null) {
                 String id = String.valueOf(updateProductCredentials.getId());
 
-                if (updateProductCredentials.getTitle() != null)
-                    db.updateProduct("title", updateProductCredentials.getTitle(), "id", id);
+                // if (updateProductCredentials.getTitle() != null)
+                // db.updateProduct("title", updateProductCredentials.getTitle(), "id", id);
 
                 if (updateProductCredentials.getDescription() != null)
                     db.updateProduct("description", updateProductCredentials.getDescription(), "id", id);
@@ -151,7 +145,7 @@ public class Endpoints {
                     }
                 }
                 if (updateProductCredentials.getQuantity() != null) {
-                    if(updateProductCredentials.getQuantity() > 0) {
+                    if (updateProductCredentials.getQuantity() > 0) {
                         db.updateProduct("quantity", String.valueOf(updateProductCredentials.getQuantity()), "id", id);
                     } else {
                         throw new IllegalArgumentException();
@@ -166,7 +160,7 @@ public class Endpoints {
                 ServerAPI.writeResponse(exchange, 404, ErrorResponse.of("No such product"));
             }
 
-        } catch (IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             ServerAPI.writeResponse(exchange, 409, ErrorResponse.of("Conflict"));
         } catch (Exception e) {
             e.printStackTrace();
@@ -196,6 +190,75 @@ public class Endpoints {
                 ServerAPI.writeResponse(exchange, 409, ErrorResponse.of("Conflict"));
             }
 
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    private void PutCategoryHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
+        try (final InputStream requestBody = exchange.getRequestBody()) {
+            final CategoryCredentials categoryCredentials = OBJECT_MAPPER.readValue(requestBody, CategoryCredentials.class);
+            final Category categoryToInsert = Category.builder()
+                    .title(categoryCredentials.getTitle())
+                    .description(categoryCredentials.getDescription()).build();
+
+            ServerAPI.writeResponse(exchange, 201, "Created " + categoryCredentials.getTitle());
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void DeleteCategoryHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
+        try (final InputStream requestBody = exchange.getRequestBody()) {
+            final CategoryCredentials categoryCredentials = OBJECT_MAPPER.readValue(requestBody, CategoryCredentials.class);
+            final String categoryToDeleteTitle = categoryCredentials.getTitle();
+            final Category categoryToDelete = db.getCategory(categoryToDeleteTitle);
+
+            if (categoryToDelete != null) {
+                db.deleteCategory(categoryToDeleteTitle);
+                exchange.sendResponseHeaders(204, -1);
+            } else {
+                ServerAPI.writeResponse(exchange, 404, ErrorResponse.of("No such category"));
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void PostCategoryHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
+        try (final InputStream requestBody = exchange.getRequestBody()) {
+            final CategoryCredentials categoryCredentials = OBJECT_MAPPER.readValue(requestBody, CategoryCredentials.class);
+            final String categoryToUpdateTitle = categoryCredentials.getTitle();
+            final Category categoryToUpdate = db.getCategory(categoryToUpdateTitle);
+
+            if (categoryToUpdate != null) {
+                if (categoryCredentials.getDescription() != null) {
+                    db.updateProduct("description", categoryCredentials.getDescription(), "title", categoryToUpdateTitle);
+                    exchange.sendResponseHeaders(204, -1);
+                }
+            } else {
+                ServerAPI.writeResponse(exchange, 404, ErrorResponse.of("No such category"));
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    private void GetCategoryByTitleHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
+        try (final InputStream requestBody = exchange.getRequestBody()){
+            final CategoryCredentials categoryCredentials = OBJECT_MAPPER.readValue(requestBody, CategoryCredentials.class);
+            final Category category = db.getCategory(categoryCredentials.getTitle());
+
+            if (category != null) {
+                ServerAPI.writeResponse(exchange, 200, category);
+            } else {
+                ServerAPI.writeResponse(exchange, 404, ErrorResponse.of("No such category"));
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
