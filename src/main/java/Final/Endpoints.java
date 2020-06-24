@@ -50,7 +50,9 @@ public class Endpoints {
                 .of("GET", "\\/api\\/product/search", this::SearchForProductHandler, (a, b) -> new HashMap<>()));
 
         endpoints.add(Endpoint.of("GET", "\\/api\\/category/all", this::GetAllCategoriesHandler, (a, b) -> new HashMap<>()));
+        endpoints.add(Endpoint.of("GET", "\\/api\\/products/all", this::GetAllProductsHandler, (a, b) -> new HashMap<>()));
 
+        endpoints.add(Endpoint.of("GET", "\\/api\\/category/products", this::GetAllProductsByCategoryHandler, (a, b) -> new HashMap<>()));
     }
 
 
@@ -230,7 +232,7 @@ public class Endpoints {
                     db.updateCategory("description", categoryCredentials.getDescription(), "title",
                             categoryToUpdateTitle);
                 }
-                ServerAPI.writeResponse(exchange,204,null);
+                ServerAPI.writeResponse(exchange, 204, null);
             } else {
                 ServerAPI.writeResponse(exchange, 404, ErrorResponse.of("No such category"));
             }
@@ -294,6 +296,28 @@ public class Endpoints {
     private void GetAllProductsHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
         try {
             List<Product> resList = db.getProductList(0, 20, new ProductFilter());
+
+            if (resList.size() != 0) {
+                ServerAPI.writeResponse(exchange, 200, resList);
+            } else {
+                ServerAPI.writeResponse(exchange, 404, ErrorResponse.of("No products yet!"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    private void GetAllProductsByCategoryHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
+        try (final InputStream requestBody = exchange.getRequestBody()) {
+
+            final CategoryCredentials categoryCredentials =
+                    OBJECT_MAPPER.readValue(requestBody, CategoryCredentials.class);
+
+            ProductFilter filter = new ProductFilter();
+            filter.setCategory(categoryCredentials.getTitle());
+
+            List<Product> resList = db.getProductList(0, 20, filter);
 
             if (resList.size() != 0) {
                 ServerAPI.writeResponse(exchange, 200, resList);

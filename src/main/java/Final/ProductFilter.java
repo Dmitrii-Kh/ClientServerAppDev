@@ -11,6 +11,11 @@ public class ProductFilter {
     private Integer fromQuantity;
     private Integer toQuantity;
 
+    public String getCategory() { return category; }
+
+    public void setCategory(String category) { this.category = category; }
+
+    private String category;
 
     public Set<Integer> getIds() {
         return ids;

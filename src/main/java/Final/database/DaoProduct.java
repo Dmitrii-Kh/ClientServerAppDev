@@ -24,7 +24,7 @@ public class DaoProduct {
                 "insert into 'products'('title', 'description', 'producer', 'price', 'quantity', 'category') " +
                         "values (?, ?, ?, ?, ?, ?)")) {
 
-            if(product.getPrice() < 0 || product.getQuantity() < 0) return -1;
+            if (product.getPrice() < 0 || product.getQuantity() < 0) return -1;
 
             insertStatement.setString(1, product.getTitle());
             insertStatement.setString(2, product.getDescription());
@@ -64,7 +64,7 @@ public class DaoProduct {
     public Product getProduct(String title) {
         try (final Statement statement = connection.createStatement()) {
 
-            final String    query     = "SELECT * FROM 'products' WHERE title = '" + title + "'";
+            final String query = "SELECT * FROM 'products' WHERE title = '" + title + "'";
             final ResultSet resultSet = statement.executeQuery(query);
 
             return resultSet.next() ?
@@ -108,7 +108,8 @@ public class DaoProduct {
     private static String createWhereClause(ProductFilter productFilter) {
         final String query = Stream.of(like("title", productFilter.getQuery()), in("id", productFilter.getIds()),
                 range("price", productFilter.getFromPrice(), productFilter.getToPrice()),
-                range("quantity", productFilter.getFromQuantity(), productFilter.getToQuantity()))
+                range("quantity", productFilter.getFromQuantity(), productFilter.getToQuantity()),
+                category(productFilter.getCategory()))
                 .filter(Objects::nonNull).collect(Collectors.joining(" AND "));
 
         final String where = query.isEmpty() ? "" : "where " + query;
@@ -117,6 +118,10 @@ public class DaoProduct {
 
     private static String like(final String fieldName, final String query) {
         return query != null ? fieldName + " LIKE  '%" + query + "%'" : null;
+    }
+
+    private static String category(final String categoryTitle) {
+        return categoryTitle != null ? "category IN ('" + categoryTitle + "')" : null;
     }
 
     private static String in(final String fieldName, final Collection<?> collection) {
