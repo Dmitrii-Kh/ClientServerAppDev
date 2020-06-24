@@ -9,5 +9,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor(staticName = "of")
 public class CategoryCredentials {
     private String title;
+    private String newTitle;
     private String description;
 }

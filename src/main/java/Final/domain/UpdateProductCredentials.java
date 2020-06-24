@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor(staticName = "of")
 public class UpdateProductCredentials {
     private int id;
-   // private String title;
+    private String title;
     private String description;
     private String producer;
     private Double price;

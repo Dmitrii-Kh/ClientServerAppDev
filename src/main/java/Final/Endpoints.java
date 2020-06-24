@@ -96,8 +96,8 @@ public class Endpoints {
     private void getProductByIdHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
 
         try {
-            final int     productId = Integer.parseInt(pathParams.get("productId"));
-            final Product product   = db.getProduct(productId);
+            final int productId = Integer.parseInt(pathParams.get("productId"));
+            final Product product = db.getProduct(productId);
 
             if (product != null) {
                 ServerAPI.writeResponse(exchange, 200, product);
@@ -113,8 +113,8 @@ public class Endpoints {
     private void deleteProductByIdHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
 
         try {
-            final int productId       = Integer.parseInt(pathParams.get("productId"));
-            Product   productToDelete = db.getProduct(productId);
+            final int productId = Integer.parseInt(pathParams.get("productId"));
+            Product productToDelete = db.getProduct(productId);
 
             if (productToDelete != null) {
                 db.deleteProduct(productToDelete.getTitle());
@@ -142,8 +142,9 @@ public class Endpoints {
             if (db.getProduct(updateProductCredentials.getId()) != null) {
                 String id = String.valueOf(updateProductCredentials.getId());
 
-                // if (updateProductCredentials.getTitle() != null)
-                // db.updateProduct("title", updateProductCredentials.getTitle(), "id", id);
+                if (updateProductCredentials.getTitle() != null) {
+                    db.updateProduct("title", updateProductCredentials.getTitle(), "id", id);
+                }
 
                 if (updateProductCredentials.getDescription() != null) {
                     db.updateProduct("description", updateProductCredentials.getDescription(), "id", id);
@@ -229,10 +230,10 @@ public class Endpoints {
 
     private void DeleteCategoryHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
         try (final InputStream requestBody = exchange.getRequestBody()) {
-            final CategoryCredentials categoryCredentials   =
+            final CategoryCredentials categoryCredentials =
                     OBJECT_MAPPER.readValue(requestBody, CategoryCredentials.class);
-            final String              categoryToDeleteTitle = categoryCredentials.getTitle();
-            final Category            categoryToDelete      = db.getCategory(categoryToDeleteTitle);
+            final String categoryToDeleteTitle = categoryCredentials.getTitle();
+            final Category categoryToDelete = db.getCategory(categoryToDeleteTitle);
 
             if (categoryToDelete != null) {
                 db.deleteCategory(categoryToDeleteTitle);
@@ -248,17 +249,22 @@ public class Endpoints {
 
     private void PostCategoryHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
         try (final InputStream requestBody = exchange.getRequestBody()) {
-            final CategoryCredentials categoryCredentials   =
+            final CategoryCredentials categoryCredentials =
                     OBJECT_MAPPER.readValue(requestBody, CategoryCredentials.class);
-            final String              categoryToUpdateTitle = categoryCredentials.getTitle();
-            final Category            categoryToUpdate      = db.getCategory(categoryToUpdateTitle);
+            final String categoryToUpdateTitle = categoryCredentials.getTitle();
+            final Category categoryToUpdate = db.getCategory(categoryToUpdateTitle);
 
             if (categoryToUpdate != null) {
+
+                if (categoryCredentials.getNewTitle() != null) {
+                    db.updateCategory("title", categoryCredentials.getNewTitle(), "title", categoryToUpdateTitle);
+                }
+
                 if (categoryCredentials.getDescription() != null) {
                     db.updateCategory("description", categoryCredentials.getDescription(), "title",
                             categoryToUpdateTitle);
-                    exchange.sendResponseHeaders(204, -1);
                 }
+                exchange.sendResponseHeaders(204, -1);
             } else {
                 ServerAPI.writeResponse(exchange, 404, ErrorResponse.of("No such category"));
             }
@@ -273,7 +279,7 @@ public class Endpoints {
         try (final InputStream requestBody = exchange.getRequestBody()) {
             final CategoryCredentials categoryCredentials =
                     OBJECT_MAPPER.readValue(requestBody, CategoryCredentials.class);
-            final Category            category            = db.getCategory(categoryCredentials.getTitle());
+            final Category category = db.getCategory(categoryCredentials.getTitle());
 
             if (category != null) {
                 ServerAPI.writeResponse(exchange, 200, category);
@@ -305,8 +311,8 @@ public class Endpoints {
 
 
     private void GetAllCategoriesHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
-        try  {
-            List<Category> resList = db.getCategoryList(0,20);
+        try {
+            List<Category> resList = db.getCategoryList(0, 20);
 
             if (resList.size() != 0) {
                 ServerAPI.writeResponse(exchange, 200, resList);
@@ -321,7 +327,7 @@ public class Endpoints {
     private void loginHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
         try (final InputStream requestBody = exchange.getRequestBody()) {
             final UserCredentials userCredential = OBJECT_MAPPER.readValue(requestBody, UserCredentials.class);
-            final User            user           = db.getUser(userCredential.getLogin());
+            final User user = db.getUser(userCredential.getLogin());
 
             if (user != null) {
                 if (user.getPassword().equals(DigestUtils.md5Hex(userCredential.getPassword()))) {
