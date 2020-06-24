@@ -290,6 +290,21 @@ public class Endpoints {
         }
     }
 
+
+    private void GetAllProductsHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
+        try {
+            List<Product> resList = db.getProductList(0, 20, new ProductFilter());
+
+            if (resList.size() != 0) {
+                ServerAPI.writeResponse(exchange, 200, resList);
+            } else {
+                ServerAPI.writeResponse(exchange, 404, ErrorResponse.of("No products yet!"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     private void loginHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
         try (final InputStream requestBody = exchange.getRequestBody()) {
             final UserCredentials userCredential = OBJECT_MAPPER.readValue(requestBody, UserCredentials.class);
