@@ -25,8 +25,8 @@ public class ServerAPI {
 
     private final Database db = Database.getInstance();
 
-    private static final String AUTHORIZATION_HEADER = "Authorization";
-    private static final HttpPrincipal ANONYMOUS_USER = new HttpPrincipal("anonymous", "anonymous");
+    private static final String        AUTHORIZATION_HEADER = "Authorization";
+    private static final HttpPrincipal ANONYMOUS_USER       = new HttpPrincipal("anonymous", "anonymous");
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -41,8 +41,7 @@ public class ServerAPI {
         processPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(maxProcessThreads);
         this.server = HttpServer.create();
         server.bind(new InetSocketAddress(port), 30);
-        server.createContext("/", this::rootHandler)
-                .setAuthenticator(new MyAuthenticator());
+        server.createContext("/", this::rootHandler).setAuthenticator(new MyAuthenticator());
 
 //        db.insertUser(User.builder()
 //                .login("admin")
@@ -65,7 +64,7 @@ public class ServerAPI {
     }
 
 
-    public void addEndpoint(Endpoint endpoint){
+    public void addEndpoint(Endpoint endpoint) {
         endpoints.add(endpoint);
     }
 
@@ -75,15 +74,14 @@ public class ServerAPI {
 
 
     private void rootHandler(final HttpExchange exchange) throws IOException {
-        System.out.println(exchange.getRequestMethod());
+//        System.out.println(exchange.getRequestMethod());
 
-        if(exchange.getRequestMethod().toLowerCase().equals("options")){
+        if (exchange.getRequestMethod().toLowerCase().equals("options")) {
             optionsHandler(exchange);
             return;
         }
 
-        exchange.getResponseHeaders()
-                .add("Content-Type", "application/json");
+        exchange.getResponseHeaders().add("Content-Type", "application/json");
 
         final String uri = exchange.getRequestURI().toString();
 
@@ -92,16 +90,15 @@ public class ServerAPI {
             return;
         }
 
-        final Optional<Endpoint> endpoint = endpoints.stream()
-                .filter(anEndpoint -> anEndpoint.matches(exchange.getRequestMethod(), uri))
-                .findFirst();
+        final Optional<Endpoint> endpoint =
+                endpoints.stream().filter(anEndpoint -> anEndpoint.matches(exchange.getRequestMethod(), uri))
+                        .findFirst();
 
 
         if (endpoint.isPresent()) {
             processPool.execute(() -> {
                 try {
-                    endpoint.get().handler()
-                            .handle(exchange);
+                    endpoint.get().handler().handle(exchange);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -140,7 +137,6 @@ public class ServerAPI {
     }
 
 
-
     private class MyAuthenticator extends Authenticator {
 
         @Override
@@ -150,7 +146,7 @@ public class ServerAPI {
             if (token != null) {
                 try {
                     final String username = JwtService.getUsernameFromToken(token);
-                    final User user = db.getUser(username);
+                    final User   user     = db.getUser(username);
 
                     if (user != null) {
                         return new Success(new HttpPrincipal(username, user.getRole()));
@@ -167,8 +163,8 @@ public class ServerAPI {
         }
     }
 
-    public static void writeResponse(final HttpExchange exchange, final int statusCode, final Object response) throws
-            IOException {
+    public static void writeResponse(final HttpExchange exchange, final int statusCode, final Object response)
+            throws IOException {
         final byte[] bytes = OBJECT_MAPPER.writeValueAsBytes(response);
 
         Headers headers = exchange.getResponseHeaders();
@@ -180,7 +176,7 @@ public class ServerAPI {
         headers.add("Content-Type", "application/json");
         headers.add("Connection", "close");
 
-        exchange.sendResponseHeaders(statusCode, bytes.length);
+        exchange.sendResponseHeaders(statusCode, bytes.length == 0 ? -1 : bytes.length);
         exchange.getResponseBody().write(bytes);
     }
 
