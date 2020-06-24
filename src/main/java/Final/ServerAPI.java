@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -74,9 +75,15 @@ public class ServerAPI {
 
 
     private void rootHandler(final HttpExchange exchange) throws IOException {
+        System.out.println(exchange.getRequestMethod());
 
-//        exchange.getResponseHeaders()
-//                .add("Content-Type", "application/json");
+        if(exchange.getRequestMethod().toLowerCase().equals("options")){
+            optionsHandler(exchange);
+            return;
+        }
+
+        exchange.getResponseHeaders()
+                .add("Content-Type", "application/json");
 
         final String uri = exchange.getRequestURI().toString();
 
@@ -110,6 +117,24 @@ public class ServerAPI {
             //System.out.println("404");
             exchange.sendResponseHeaders(404, 0);
         } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void optionsHandler(final HttpExchange exchange) {
+        System.out.println("options");
+        Headers headers = exchange.getResponseHeaders();
+        headers.add("Access-Control-Allow-Origin", "*");
+        headers.add("Access-Control-Allow-Headers", "origin, content-type, accept, authorization, x-auth");
+        headers.add("Access-Control-Allow-Credentials", "true");
+        headers.add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD");
+        headers.add("Access-Control-Max-Age", "360000");
+        headers.add("Content-Type", "application/json");
+        headers.add("Connection", "close");
+
+        try {
+            exchange.sendResponseHeaders(204, -1);
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -151,7 +176,7 @@ public class ServerAPI {
         headers.add("Access-Control-Allow-Headers", "origin, content-type, accept, authorization, x-auth");
         headers.add("Access-Control-Allow-Credentials", "true");
         headers.add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD");
-        headers.add("Access-Control-Max-Age", "-1");
+        headers.add("Access-Control-Max-Age", "360000");
         headers.add("Content-Type", "application/json");
         headers.add("Connection", "close");
 

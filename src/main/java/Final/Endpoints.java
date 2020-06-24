@@ -32,7 +32,6 @@ public class Endpoints {
 
     public Endpoints() {
         endpoints.add(Endpoint.of("POST", "\\/login", this::loginHandler, (a, b) -> new HashMap<>()));
-//        endpoints.add(Endpoint.of("OPTIONS", "\\/", this::OptionsHandler, (a, b) -> new HashMap<>()));
 
         endpoints.add(Endpoint
                 .of("GET", "^\\/api\\/product\\/(\\d+)$", this::GetProductByIdHandler, this::getProductParamId));
@@ -56,22 +55,6 @@ public class Endpoints {
 
     public ArrayList<Endpoint> getAllEndpoints() {
         return endpoints;
-    }
-
-    private void OptionsHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
-        Headers headers = exchange.getResponseHeaders();
-        headers.add("Access-Control-Allow-Origin", "*");
-        headers.add("Access-Control-Allow-Headers", "origin, content-type, accept, authorization");
-        headers.add("Access-Control-Allow-Credentials", "true");
-        headers.add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD");
-        headers.add("Access-Control-Max-Age", "1209600");
-        headers.add("Content-Type", "application/json");
-
-        try {
-            ServerAPI.writeResponse(exchange, 200, null);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
 
