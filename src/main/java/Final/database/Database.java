@@ -5,6 +5,7 @@ import Final.ProductFilter;
 import Final.entities.Category;
 import Final.entities.Product;
 import Final.entities.User;
+import org.sqlite.SQLiteConfig;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -52,7 +53,9 @@ public class Database {
     private Database() {
         try {
             Class.forName("org.sqlite.JDBC");
-            connection = DriverManager.getConnection("jdbc:sqlite:" + fileName);
+            SQLiteConfig config = new SQLiteConfig();
+            config.enforceForeignKeys(true);
+            connection = DriverManager.getConnection("jdbc:sqlite:" + fileName, config.toProperties());
         } catch (ClassNotFoundException e) {
             throw new RuntimeException("SQLite JDBC not found!", e);
         } catch (SQLException e) {
