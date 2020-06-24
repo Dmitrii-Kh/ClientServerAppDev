@@ -6,6 +6,7 @@ import lombok.AccessLevel;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.regex.Pattern;
@@ -40,7 +41,7 @@ public class Endpoint {
 
 
     public interface CustomHandler {
-        void handle(HttpExchange exchange, Map<String, String> pathParams);
+        void handle(HttpExchange exchange, Map<String, String> pathParams) throws IOException;
     }
 
 }

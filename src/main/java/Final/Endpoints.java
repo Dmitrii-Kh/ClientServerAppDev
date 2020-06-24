@@ -2,7 +2,6 @@ package Final;
 
 import Final.entities.Category;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import Final.database.Database;
 import Final.entities.Product;
@@ -61,39 +60,6 @@ public class Endpoints {
 
 
     private void GetProductByIdHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
-        try {
-            getProductByIdHandler(exchange, pathParams);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void DeleteProductByIdHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
-        try {
-            deleteProductByIdHandler(exchange, pathParams);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void PutProductHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
-        try {
-            addProductHandler(exchange, pathParams);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void PostProductByIdHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
-        try {
-            modifyProductHandler(exchange, pathParams);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-
-    private void getProductByIdHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
 
         try {
             final int productId = Integer.parseInt(pathParams.get("productId"));
@@ -110,7 +76,7 @@ public class Endpoints {
     }
 
 
-    private void deleteProductByIdHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
+    private void DeleteProductByIdHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
 
         try {
             final int productId = Integer.parseInt(pathParams.get("productId"));
@@ -131,7 +97,7 @@ public class Endpoints {
     }
 
 
-    private void modifyProductHandler(final HttpExchange exchange, final Map<String, String> pathParams)
+    private void PostProductByIdHandler(final HttpExchange exchange, final Map<String, String> pathParams)
             throws IOException {
 
         try (final InputStream requestBody = exchange.getRequestBody()) {
@@ -186,7 +152,7 @@ public class Endpoints {
     }
 
 
-    private void addProductHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
+    private void PutProductHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
 
         try (final InputStream requestBody = exchange.getRequestBody()) {
 
