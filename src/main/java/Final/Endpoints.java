@@ -52,7 +52,7 @@ public class Endpoints {
         endpoints.add(Endpoint.of("GET", "\\/api\\/category/all", this::GetAllCategoriesHandler, (a, b) -> new HashMap<>()));
         endpoints.add(Endpoint.of("GET", "\\/api\\/products/all", this::GetAllProductsHandler, (a, b) -> new HashMap<>()));
 
-        endpoints.add(Endpoint.of("GET", "\\/api\\/category/products", this::GetAllProductsByCategoryHandler, (a, b) -> new HashMap<>()));
+        endpoints.add(Endpoint.of("POST", "\\/api\\/category/products", this::GetAllProductsByCategoryHandler, (a, b) -> new HashMap<>()));
     }
 
 
