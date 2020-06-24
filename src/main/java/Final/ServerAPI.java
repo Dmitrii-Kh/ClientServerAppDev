@@ -176,8 +176,12 @@ public class ServerAPI {
         headers.add("Content-Type", "application/json");
         headers.add("Connection", "close");
 
-        exchange.sendResponseHeaders(statusCode, bytes.length == 0 ? -1 : bytes.length);
-        exchange.getResponseBody().write(bytes);
+        if(response == null){
+            exchange.sendResponseHeaders(statusCode, -1);
+        } else {
+            exchange.sendResponseHeaders(statusCode, bytes.length);
+            exchange.getResponseBody().write(bytes);
+        }
     }
 
     public Database db() {

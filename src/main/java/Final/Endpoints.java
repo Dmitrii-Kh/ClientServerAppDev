@@ -203,7 +203,7 @@ public class Endpoints {
 
             if (categoryToDelete != null) {
                 db.deleteCategory(categoryToDeleteTitle);
-                exchange.sendResponseHeaders(204, -1);
+                ServerAPI.writeResponse(exchange, 204, null);
             } else {
                 ServerAPI.writeResponse(exchange, 404, ErrorResponse.of("No such category"));
             }
@@ -214,7 +214,6 @@ public class Endpoints {
     }
 
     private void PostCategoryHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
-        System.out.println("changed");
         try (final InputStream requestBody = exchange.getRequestBody()) {
             final CategoryCredentials categoryCredentials =
                     OBJECT_MAPPER.readValue(requestBody, CategoryCredentials.class);
