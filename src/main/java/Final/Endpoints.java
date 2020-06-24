@@ -50,6 +50,8 @@ public class Endpoints {
         endpoints.add(Endpoint
                 .of("GET", "\\/api\\/product/search", this::SearchForProductHandler, (a, b) -> new HashMap<>()));
 
+        endpoints.add(Endpoint.of("GET", "\\/api\\/category/all", this::GetAllCategoriesHandler, (a, b) -> new HashMap<>()));
+
     }
 
 
@@ -295,6 +297,21 @@ public class Endpoints {
                 ServerAPI.writeResponse(exchange, 200, resList);
             } else {
                 ServerAPI.writeResponse(exchange, 404, ErrorResponse.of("No such products"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    private void GetAllCategoriesHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
+        try  {
+            List<Category> resList = db.getCategoryList(0,20);
+
+            if (resList.size() != 0) {
+                ServerAPI.writeResponse(exchange, 200, resList);
+            } else {
+                ServerAPI.writeResponse(exchange, 404, ErrorResponse.of("No categories yet!"));
             }
         } catch (Exception e) {
             e.printStackTrace();
