@@ -3,10 +3,7 @@ package Final;
 import Final.entities.Category;
 import Final.entities.Product;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.net.httpserver.Authenticator;
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpPrincipal;
-import com.sun.net.httpserver.HttpServer;
+import com.sun.net.httpserver.*;
 import Final.database.Database;
 import Final.entities.User;
 import Final.HTTP.Endpoint;
@@ -42,27 +39,27 @@ public class ServerAPI {
 
         processPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(maxProcessThreads);
         this.server = HttpServer.create();
-        server.bind(new InetSocketAddress(port), 0);
+        server.bind(new InetSocketAddress(port), 30);
         server.createContext("/", this::rootHandler)
                 .setAuthenticator(new MyAuthenticator());
 
-        db.insertUser(User.builder()
-                .login("admin")
-                .password(DigestUtils.md5Hex("password"))
-                .role("admin")
-                .build());
-        db.insertCategory(Category.builder().title("food").description("smth to eat").build());
-
-        for (int i = 0; i < 7; i++) {
-            db.insertProduct(Product.builder()
-                    .title("product" + i)
-                    .description("description")
-                    .producer("producer" + i)
-                    .price(Math.random() * 100)
-                    .quantity(i * i + 1)
-                    .category("food")
-                    .build());
-        }
+//        db.insertUser(User.builder()
+//                .login("admin")
+//                .password(DigestUtils.md5Hex("password"))
+//                .role("admin")
+//                .build());
+//        db.insertCategory(Category.builder().title("food").description("smth to eat").build());
+//
+//        for (int i = 0; i < 7; i++) {
+//            db.insertProduct(Product.builder()
+//                    .title("product" + i)
+//                    .description("description")
+//                    .producer("producer" + i)
+//                    .price(Math.random() * 100)
+//                    .quantity(i * i + 1)
+//                    .category("food")
+//                    .build());
+//        }
         server.start();
     }
 
@@ -78,8 +75,8 @@ public class ServerAPI {
 
     private void rootHandler(final HttpExchange exchange) throws IOException {
 
-        exchange.getResponseHeaders()
-                .add("Content-Type", "application/json");
+//        exchange.getResponseHeaders()
+//                .add("Content-Type", "application/json");
 
         final String uri = exchange.getRequestURI().toString();
 
@@ -125,7 +122,6 @@ public class ServerAPI {
         public Result authenticate(final HttpExchange httpExchange) {
             final String token = httpExchange.getRequestHeaders().getFirst(AUTHORIZATION_HEADER);
 
-
             if (token != null) {
                 try {
                     final String username = JwtService.getUsernameFromToken(token);
@@ -149,6 +145,16 @@ public class ServerAPI {
     public static void writeResponse(final HttpExchange exchange, final int statusCode, final Object response) throws
             IOException {
         final byte[] bytes = OBJECT_MAPPER.writeValueAsBytes(response);
+
+        Headers headers = exchange.getResponseHeaders();
+        headers.add("Access-Control-Allow-Origin", "*");
+        headers.add("Access-Control-Allow-Headers", "origin, content-type, accept, authorization, x-auth");
+        headers.add("Access-Control-Allow-Credentials", "true");
+        headers.add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD");
+        headers.add("Access-Control-Max-Age", "-1");
+        headers.add("Content-Type", "application/json");
+        headers.add("Connection", "close");
+
         exchange.sendResponseHeaders(statusCode, bytes.length);
         exchange.getResponseBody().write(bytes);
     }

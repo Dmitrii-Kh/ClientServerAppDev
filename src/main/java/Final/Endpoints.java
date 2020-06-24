@@ -2,6 +2,7 @@ package Final;
 
 import Final.entities.Category;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import Final.database.Database;
 import Final.entities.Product;
@@ -31,24 +32,46 @@ public class Endpoints {
 
     public Endpoints() {
         endpoints.add(Endpoint.of("POST", "\\/login", this::loginHandler, (a, b) -> new HashMap<>()));
+//        endpoints.add(Endpoint.of("OPTIONS", "\\/", this::OptionsHandler, (a, b) -> new HashMap<>()));
 
-        endpoints.add(Endpoint.of("GET", "^\\/api\\/product\\/(\\d+)$", this::GetProductByIdHandler, this::getProductParamId));
-        endpoints.add(Endpoint.of("DELETE", "^\\/api\\/product\\/(\\d+)$", this::DeleteProductByIdHandler, this::getProductParamId));
+        endpoints.add(Endpoint
+                .of("GET", "^\\/api\\/product\\/(\\d+)$", this::GetProductByIdHandler, this::getProductParamId));
+        endpoints.add(Endpoint
+                .of("DELETE", "^\\/api\\/product\\/(\\d+)$", this::DeleteProductByIdHandler, this::getProductParamId));
         endpoints.add(Endpoint.of("POST", "\\/api\\/product", this::PostProductByIdHandler, (a, b) -> new HashMap<>()));
         endpoints.add(Endpoint.of("PUT", "\\/api\\/product", this::PutProductHandler, (a, b) -> new HashMap<>()));
 
-        endpoints.add(Endpoint.of("GET", "\\/api\\/category", this::GetCategoryByTitleHandler, (a, b) -> new HashMap<>()));
-        endpoints.add(Endpoint.of("DELETE", "\\/api\\/category", this::DeleteCategoryHandler, (a, b) -> new HashMap<>()));
+        endpoints.add(Endpoint
+                .of("GET", "\\/api\\/category", this::GetCategoryByTitleHandler, (a, b) -> new HashMap<>()));
+        endpoints.add(Endpoint
+                .of("DELETE", "\\/api\\/category", this::DeleteCategoryHandler, (a, b) -> new HashMap<>()));
         endpoints.add(Endpoint.of("POST", "\\/api\\/category", this::PostCategoryHandler, (a, b) -> new HashMap<>()));
         endpoints.add(Endpoint.of("PUT", "\\/api\\/category", this::PutCategoryHandler, (a, b) -> new HashMap<>()));
 
-        endpoints.add(Endpoint.of("GET", "\\/api\\/product/search", this::SearchForProductHandler, (a, b) -> new HashMap<>()));
+        endpoints.add(Endpoint
+                .of("GET", "\\/api\\/product/search", this::SearchForProductHandler, (a, b) -> new HashMap<>()));
 
     }
 
 
     public ArrayList<Endpoint> getAllEndpoints() {
         return endpoints;
+    }
+
+    private void OptionsHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
+        Headers headers = exchange.getResponseHeaders();
+        headers.add("Access-Control-Allow-Origin", "*");
+        headers.add("Access-Control-Allow-Headers", "origin, content-type, accept, authorization");
+        headers.add("Access-Control-Allow-Credentials", "true");
+        headers.add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD");
+        headers.add("Access-Control-Max-Age", "1209600");
+        headers.add("Content-Type", "application/json");
+
+        try {
+            ServerAPI.writeResponse(exchange, 200, null);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 
@@ -88,8 +111,8 @@ public class Endpoints {
     private void getProductByIdHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
 
         try {
-            final int productId = Integer.parseInt(pathParams.get("productId"));
-            final Product product = db.getProduct(productId);
+            final int     productId = Integer.parseInt(pathParams.get("productId"));
+            final Product product   = db.getProduct(productId);
 
             if (product != null) {
                 ServerAPI.writeResponse(exchange, 200, product);
@@ -105,13 +128,15 @@ public class Endpoints {
     private void deleteProductByIdHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
 
         try {
-            final int productId = Integer.parseInt(pathParams.get("productId"));
-            Product productToDelete = db.getProduct(productId);
+            final int productId       = Integer.parseInt(pathParams.get("productId"));
+            Product   productToDelete = db.getProduct(productId);
 
             if (productToDelete != null) {
                 db.deleteProduct(productToDelete.getTitle());
                 if (db.getProduct(productId) == null)                               //? assert that product is deleted
+                {
                     exchange.sendResponseHeaders(204, -1);
+                }
             } else {
                 ServerAPI.writeResponse(exchange, 404, ErrorResponse.of("No such product"));
             }
@@ -121,12 +146,13 @@ public class Endpoints {
     }
 
 
-    private void modifyProductHandler(final HttpExchange exchange, final Map<String, String> pathParams) throws IOException {
+    private void modifyProductHandler(final HttpExchange exchange, final Map<String, String> pathParams)
+            throws IOException {
 
         try (final InputStream requestBody = exchange.getRequestBody()) {
 
-            final UpdateProductCredentials
-                    updateProductCredentials = OBJECT_MAPPER.readValue(requestBody, UpdateProductCredentials.class);
+            final UpdateProductCredentials updateProductCredentials =
+                    OBJECT_MAPPER.readValue(requestBody, UpdateProductCredentials.class);
 
             if (db.getProduct(updateProductCredentials.getId()) != null) {
                 String id = String.valueOf(updateProductCredentials.getId());
@@ -134,11 +160,13 @@ public class Endpoints {
                 // if (updateProductCredentials.getTitle() != null)
                 // db.updateProduct("title", updateProductCredentials.getTitle(), "id", id);
 
-                if (updateProductCredentials.getDescription() != null)
+                if (updateProductCredentials.getDescription() != null) {
                     db.updateProduct("description", updateProductCredentials.getDescription(), "id", id);
+                }
 
-                if (updateProductCredentials.getProducer() != null)
+                if (updateProductCredentials.getProducer() != null) {
                     db.updateProduct("producer", updateProductCredentials.getProducer(), "id", id);
+                }
 
                 if (updateProductCredentials.getPrice() != null) {
                     if (updateProductCredentials.getPrice() > 0) {
@@ -154,8 +182,9 @@ public class Endpoints {
                         throw new IllegalArgumentException();
                     }
                 }
-                if (updateProductCredentials.getCategory() != null)
+                if (updateProductCredentials.getCategory() != null) {
                     db.updateProduct("category", updateProductCredentials.getCategory(), "id", id);
+                }
 
                 exchange.sendResponseHeaders(204, -1);
 
@@ -175,15 +204,12 @@ public class Endpoints {
 
         try (final InputStream requestBody = exchange.getRequestBody()) {
 
-            final ProductCredentials productCredentials = OBJECT_MAPPER.readValue(requestBody, ProductCredentials.class);
-            final Product product = Product.builder()
-                    .title(productCredentials.getTitle())
-                    .description(productCredentials.getDescription())
-                    .producer(productCredentials.getProducer())
-                    .price(productCredentials.getPrice())
-                    .quantity(productCredentials.getQuantity())
-                    .category(productCredentials.getCategory())
-                    .build();
+            final ProductCredentials productCredentials =
+                    OBJECT_MAPPER.readValue(requestBody, ProductCredentials.class);
+            final Product product = Product.builder().title(productCredentials.getTitle())
+                    .description(productCredentials.getDescription()).producer(productCredentials.getProducer())
+                    .price(productCredentials.getPrice()).quantity(productCredentials.getQuantity())
+                    .category(productCredentials.getCategory()).build();
 
             final int productId = db.insertProduct(product);
 
@@ -201,16 +227,15 @@ public class Endpoints {
 
     private void PutCategoryHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
         try (final InputStream requestBody = exchange.getRequestBody()) {
-            final CategoryCredentials categoryCredentials = OBJECT_MAPPER.readValue(requestBody, CategoryCredentials.class);
-            final Category categoryToInsert = Category.builder()
-                    .title(categoryCredentials.getTitle())
+            final CategoryCredentials categoryCredentials =
+                    OBJECT_MAPPER.readValue(requestBody, CategoryCredentials.class);
+            final Category categoryToInsert = Category.builder().title(categoryCredentials.getTitle())
                     .description(categoryCredentials.getDescription()).build();
 
             int row = -1;
             row = db.insertCategory(categoryToInsert);
 
-            if (row > 0)
-                ServerAPI.writeResponse(exchange, 201, "Created " + categoryCredentials.getTitle());
+            if (row > 0) ServerAPI.writeResponse(exchange, 201, "Created " + categoryCredentials.getTitle());
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -219,9 +244,10 @@ public class Endpoints {
 
     private void DeleteCategoryHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
         try (final InputStream requestBody = exchange.getRequestBody()) {
-            final CategoryCredentials categoryCredentials = OBJECT_MAPPER.readValue(requestBody, CategoryCredentials.class);
-            final String categoryToDeleteTitle = categoryCredentials.getTitle();
-            final Category categoryToDelete = db.getCategory(categoryToDeleteTitle);
+            final CategoryCredentials categoryCredentials   =
+                    OBJECT_MAPPER.readValue(requestBody, CategoryCredentials.class);
+            final String              categoryToDeleteTitle = categoryCredentials.getTitle();
+            final Category            categoryToDelete      = db.getCategory(categoryToDeleteTitle);
 
             if (categoryToDelete != null) {
                 db.deleteCategory(categoryToDeleteTitle);
@@ -237,13 +263,15 @@ public class Endpoints {
 
     private void PostCategoryHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
         try (final InputStream requestBody = exchange.getRequestBody()) {
-            final CategoryCredentials categoryCredentials = OBJECT_MAPPER.readValue(requestBody, CategoryCredentials.class);
-            final String categoryToUpdateTitle = categoryCredentials.getTitle();
-            final Category categoryToUpdate = db.getCategory(categoryToUpdateTitle);
+            final CategoryCredentials categoryCredentials   =
+                    OBJECT_MAPPER.readValue(requestBody, CategoryCredentials.class);
+            final String              categoryToUpdateTitle = categoryCredentials.getTitle();
+            final Category            categoryToUpdate      = db.getCategory(categoryToUpdateTitle);
 
             if (categoryToUpdate != null) {
                 if (categoryCredentials.getDescription() != null) {
-                    db.updateCategory("description", categoryCredentials.getDescription(), "title", categoryToUpdateTitle);
+                    db.updateCategory("description", categoryCredentials.getDescription(), "title",
+                            categoryToUpdateTitle);
                     exchange.sendResponseHeaders(204, -1);
                 }
             } else {
@@ -258,8 +286,9 @@ public class Endpoints {
 
     private void GetCategoryByTitleHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
         try (final InputStream requestBody = exchange.getRequestBody()) {
-            final CategoryCredentials categoryCredentials = OBJECT_MAPPER.readValue(requestBody, CategoryCredentials.class);
-            final Category category = db.getCategory(categoryCredentials.getTitle());
+            final CategoryCredentials categoryCredentials =
+                    OBJECT_MAPPER.readValue(requestBody, CategoryCredentials.class);
+            final Category            category            = db.getCategory(categoryCredentials.getTitle());
 
             if (category != null) {
                 ServerAPI.writeResponse(exchange, 200, category);
@@ -280,7 +309,7 @@ public class Endpoints {
             List<Product> resList = db.getProductList(0, 10, filter);
 
             if (resList.size() != 0) {
-                    ServerAPI.writeResponse(exchange, 200, resList);
+                ServerAPI.writeResponse(exchange, 200, resList);
             } else {
                 ServerAPI.writeResponse(exchange, 404, ErrorResponse.of("No such products"));
             }
@@ -290,15 +319,14 @@ public class Endpoints {
     }
 
     private void loginHandler(final HttpExchange exchange, final Map<String, String> pathParams) {
-
         try (final InputStream requestBody = exchange.getRequestBody()) {
             final UserCredentials userCredential = OBJECT_MAPPER.readValue(requestBody, UserCredentials.class);
-            final User user = db.getUser(userCredential.getLogin());
+            final User            user           = db.getUser(userCredential.getLogin());
 
             if (user != null) {
                 if (user.getPassword().equals(DigestUtils.md5Hex(userCredential.getPassword()))) {
-                    final LoginResponse
-                            loginResponse = LoginResponse.of(JwtService.generateToken(user), user.getLogin(), user.getRole());
+                    final LoginResponse loginResponse =
+                            LoginResponse.of(JwtService.generateToken(user), user.getLogin(), user.getRole());
                     ServerAPI.writeResponse(exchange, 200, loginResponse);
                 } else {
                     ServerAPI.writeResponse(exchange, 401, ErrorResponse.of("invalid password"));
